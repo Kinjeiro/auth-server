@@ -1,0 +1,15 @@
+{
+  "presets": [
+    "env"
+  ],
+  "plugins": [
+    "babel-plugin-transform-export-extensions",
+    "babel-plugin-transform-object-rest-spread",
+    "babel-plugin-transform-class-properties",
+    ["babel-plugin-transform-runtime", {
+      "polyfill": false,
+      "regenerator": true
+    }]
+  ],
+  "sourceMap": "both"
+}

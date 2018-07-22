@@ -1,0 +1,12 @@
+.idea/
+.build/
+.build-docker/
+node_modules/
+lib/
+logs/
+dist/
+
+npm-debug.log
+docker/tmp-package.json
+build-scripts/test-results.xml
+build-scripts/coverage/

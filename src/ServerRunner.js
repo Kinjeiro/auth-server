@@ -1,0 +1,129 @@
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import bodyParser from 'body-parser';
+import methodOverride from 'method-override';
+import morgan from 'morgan';
+import debug from 'debug';
+
+import config from './config';
+import logger from './helpers/logger';
+import './db/init-models';
+import { connect } from './db/db-utils';
+
+import { expressPlugin as authenticatePlugin } from './auth/authenticate-passport';
+import applyRoutes from './routes';
+
+const debugRestApi = debug('restapi');
+
+export default class ServerRunner {
+  init = false;
+  app = null;
+  server = null;
+
+  createApp(serverOptions) {
+    return express(serverOptions);
+  }
+
+  getMiddlewarePlugins() {
+    return [
+      bodyParser.json(),
+      bodyParser.urlencoded({ extended: false }),
+      cookieParser(),
+      methodOverride(),
+      morgan('combined', {
+        stream: {
+          write: message => logger.info(message),
+        },
+      }),
+      authenticatePlugin(),
+    ];
+  }
+
+  errorHandle(err, req, res, next)  {
+    // todo @ANKU @LOW - подумать над форматом
+    res.status(err.status || 500);
+    logger.error('%s %d %s', req.method, res.statusCode, err.message);
+    res.json({
+      error: err.message,
+    });
+  }
+
+  getLastMiddlewarePlugins() {
+    return [
+      // catch 404 and forward to error handler
+      (req, res, next) => {
+        res.status(404);
+        logger.debug('%s %d %s', req.method, res.statusCode, req.url);
+        res.json({
+          error: 'Not found',
+        });
+      },
+      // error handlers
+      this.errorHandle.bind(this),
+    ];
+  }
+
+  getRouteAppliers() {
+    return [
+      applyRoutes,
+    ];
+  }
+
+  connectToDataBase() {
+    connect();
+  }
+
+  initServer() {
+    if (!config.common.isProduction) {
+      logger.debug('=== SERVER CONFIG ===\n', JSON.stringify(config, null, 2), '\n\n');
+    }
+
+    this.app = this.createApp(config.server.serverConfig.expressServerOptions);
+
+    // ======================================================
+    // FIRST MIDDLEWARES
+    // ======================================================
+    this.getMiddlewarePlugins().forEach(plugin => this.app.use(plugin));
+
+    // ======================================================
+    // ROUTER MIDDLEWARES
+    // ======================================================
+    this.getRouteAppliers().forEach(routeApplier => routeApplier(this.app));
+
+    // ======================================================
+    // LAST MIDDLEWARES
+    // ======================================================
+    this.getLastMiddlewarePlugins().forEach(plugin => this.app.use(plugin));
+
+    this.init = true;
+  }
+
+  runServer() {
+    try {
+      const { init } = this;
+      if (!init) {
+        this.initServer();
+      }
+
+      const { app } = this;
+
+      // eslint-disable-next-line prefer-destructuring
+      const port = config.server.serverConfig.port;
+
+      app.set('port', port);
+
+      this.server = app.listen(port, () => {
+        debugRestApi(`Express server listening on port ${port}`);
+        logger.info(`Express server listening on port ${port}`);
+      });
+
+      this.connectToDataBase();
+
+      return this.server;
+    } catch (error) {
+      logger.error(error);
+
+      throw error;
+    }
+  }
+}
