@@ -42,8 +42,8 @@ export default class ServerRunner {
   errorHandle(err, req, res, next)  {
     // todo @ANKU @LOW - подумать над форматом
     res.status(err.status || 500);
-    logger.error('%s %d %s', req.method, res.statusCode, err.message);
-    res.json({
+    logger.error('%s %d %s', req.method, res.statusCode, err.message, err.stack);
+    return res.json({
       error: err.message,
     });
   }

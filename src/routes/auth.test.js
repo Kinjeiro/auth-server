@@ -5,8 +5,10 @@ import {
 } from '../../test/utils/get-test-token';
 
 import config from '../config';
+import logger from '../helpers/logger';
 
 import { fillDataBase } from '../db/db-utils';
+import { createResetPasswordToken } from '../services/service-auth';
 
 import { GRANT_TYPE_PARAM_VALUES } from '../auth/authorization-oauth2';
 
@@ -52,7 +54,7 @@ describe('[api] auth', () => {
               ...testNewUser,
             },
           });
-        expect(true).to.equal(false);
+        expect(true).to.be.false;
       } catch (errorResponse) {
         expect(errorResponse.status).to.equal(401);
         expect(errorResponse.message).to.equal('Unauthorized');
@@ -81,7 +83,7 @@ describe('[api] auth', () => {
             username: 'fake',
             password: 'fake',
           });
-        expect(true).to.equal(false);
+        expect(true).to.be.false;
       } catch (errorResponse) {
         /*
          message = "Unauthorized"
@@ -106,7 +108,7 @@ describe('[api] auth', () => {
             username: 'fake',
             password: 'fake',
           });
-        expect(true).to.equal(false);
+        expect(true).to.be.false;
       } catch (errorResponse) {
         /*
          message = "Unauthorized"
@@ -116,8 +118,7 @@ describe('[api] auth', () => {
          status = 401
          */
         expect(errorResponse.response.status).to.equal(403);
-        expect(errorResponse.response.body.error).to.equal('invalid_grant');
-        expect(errorResponse.response.body.error_description).to.equal('Invalid resource owner credentials');
+        expect(errorResponse.response.body.error).to.equal('Invalid resource owner credentials');
       }
     });
 
@@ -202,11 +203,10 @@ describe('[api] auth', () => {
             username: testUser.username,
             password: 'fake',
           });
-        expect(true).to.equal(false);
+        expect(true).to.be.false;
       } catch (errorResponse) {
         expect(errorResponse.response.status).to.equal(403);
-        expect(errorResponse.response.body.error).to.equal('invalid_grant');
-        expect(errorResponse.response.body.error_description).to.equal('Invalid resource owner credentials');
+        expect(errorResponse.response.body.error).to.equal('Invalid resource owner credentials');
       }
     });
   });
@@ -243,7 +243,7 @@ describe('[api] auth', () => {
         await chai.request(server)
           .get('/api/auth/user')
           .set('Authorization', `Bearer ${fakeToken}`);
-        expect(true).to.equal(false);
+        expect(true).to.be.false;
       } catch (errorResponse) {
         expect(errorResponse.status).to.equal(401);
         expect(errorResponse.message).to.equal('Unauthorized');
@@ -280,11 +280,101 @@ describe('[api] auth', () => {
           .get('/api/auth/user')
           .set('Authorization', `Bearer ${token}`);
 
-        expect(true).to.equal(false);
+        expect(true).to.be.false;
       } catch (errorResponse) {
         expect(errorResponse.status).to.equal(401);
         expect(errorResponse.message).to.equal('Unauthorized');
       }
+    });
+  });
+
+  describe('[route] /api/auth/forgot', () => {
+    before(async () => {
+      await fillDataBase({
+        Client: [testClient],
+        User: [testUser],
+      }, {
+        dropOther: true,
+      });
+    });
+
+    it('should be generate new reset password token', async () => {
+      const resetPasswordPageUrl = 'http://127.0.0.1/profile/reset';
+      const {
+        status,
+        // body: {
+        //   url: resetFullUrl,
+        // },
+      } = await chai.request(server)
+        .post('/api/auth/forgot')
+        .send({
+          email: testUser.email,
+
+          resetPasswordPageUrl,
+          client_id: testClient.clientId,
+          client_secret: testClient.clientSecret,
+        });
+      expect(status).to.equal(200);
+      // expect(resetFullUrl).to.have.string(`${resetPasswordPageUrl}?token=`);
+    });
+  });
+
+  describe('[route] /api/auth/reset', () => {
+    let resetToken;
+    let accessToken;
+
+    before(async () => {
+      await fillDataBase({
+        Client: [testClient],
+        User: [testUser],
+      }, {
+        dropOther: true,
+      });
+      accessToken = await getTestToken(testUser, testClient, false);
+      resetToken = await createResetPasswordToken(testUser.email, testClient.clientId);
+      logger.debug('Start test: [route] /api/auth/reset', '\n');
+    });
+
+    it('should be change to new password', async () => {
+      // проверим что успешно залогинился
+      expect(accessToken).to.be.exist();
+
+      // меняем пароль на новый с помощью resetToken
+      const {
+        status,
+      } = await chai.request(server)
+        .post('/api/auth/reset')
+        .send({
+          resetPasswordToken: resetToken,
+          newPassword: '654321',
+          // successEmailSubject
+          // successEmailHtmlTpl
+          // successEmailOptions
+          client_id: testClient.clientId,
+          client_secret: testClient.clientSecret,
+        });
+
+      expect(status).to.equal(200);
+
+      try {
+        // логин по старым данным должен быть неудачным
+        accessToken = await getTestToken(testUser, testClient, false);
+        expect(true).to.be.false;
+      } catch (errorResponse) {
+        expect(errorResponse.status).to.equal(403);
+        expect(errorResponse.response.body.error).to.equal('Invalid resource owner credentials');
+      }
+
+      // логин по новым данным должен быть ок
+      accessToken = await getTestToken(
+        {
+          ...testUser,
+          password: '654321',
+        },
+        testClient,
+        false,
+      );
+      expect(accessToken).to.be.exist();
     });
   });
 });

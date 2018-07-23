@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 import oauth2orize from 'oauth2orize';
-import crypto from 'crypto';
 
+import { generateTokenValue } from '../utils/common';
 import config from '../config';
 import logger from '../helpers/logger';
 
@@ -20,44 +20,31 @@ import { middlewareBasicAndClientPasswordStrategy } from './authenticate-passpor
 // create OAuth 2.0 server
 const authServer = oauth2orize.createServer();
 
-// Generic error handler
-function errorFn(cb, err) {
-  if (err) {
-    logger.error(err);
-    return cb(err);
-  }
-}
-
 // Destroys any old tokens and generates a new access and refresh tokenMiddlewares
-function generateTokens(data, done) {
+async function generateTokens(data, done) {
   // curries in `done` callback so we don't need to pass it
+  await RefreshToken.remove(data);
+  await AccessToken.remove(data);
 
-  const errorHandler = errorFn.bind(undefined, done);
-
-  RefreshToken.remove(data, errorHandler);
-  AccessToken.remove(data, errorHandler);
-
-  const tokenValue = crypto.randomBytes(32).toString('hex');
-  const refreshTokenValue = crypto.randomBytes(32).toString('hex');
-
-  data.token = tokenValue;
-  const token = new AccessToken(data);
-
-  data.token = refreshTokenValue;
-  const refreshToken = new RefreshToken(data);
-
-  refreshToken.save(errorHandler);
-
-  token.save((err) => {
-    if (err) {
-      logger.error(err);
-      return done(err);
-    }
-
-    done(null, tokenValue, refreshTokenValue, {
-      expires_in: config.server.features.security.token.tokenLife,
-    });
+  const accessTokenValue = generateTokenValue();
+  const token = new AccessToken({
+    ...data,
+    token: accessTokenValue,
   });
+  await token.save();
+
+  const refreshTokenValue = generateTokenValue();
+  const refreshToken = new RefreshToken({
+    ...data,
+    token: refreshTokenValue,
+  });
+  await refreshToken.save();
+
+  return {
+    accessTokenValue,
+    refreshTokenValue,
+    expiresIn: config.server.features.security.token.tokenLife,
+  };
 }
 
 // ======================================================
@@ -79,7 +66,14 @@ authServer.exchange(
           userId: user.userId,
           clientId: client.clientId,
         };
-        return generateTokens(tokenData, done);
+
+        const {
+          accessTokenValue,
+          refreshTokenValue,
+          expiresIn,
+        } = await generateTokens(tokenData);
+
+        return done(null, accessTokenValue, refreshTokenValue, { expires_in: expiresIn });
       } catch (error) {
         return done(error);
       }
@@ -119,7 +113,14 @@ authServer.exchange(
               userId: user.userId,
               clientId: client.clientId,
             };
-            return generateTokens(tokenData, done);
+
+            const {
+              accessTokenValue,
+              refreshTokenValue,
+              expiresIn,
+            } = await generateTokens(tokenData);
+
+            return done(null, accessTokenValue, refreshTokenValue, { expires_in: expiresIn });
           } catch (error) {
             return done(error);
           }

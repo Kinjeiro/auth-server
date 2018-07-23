@@ -1,13 +1,22 @@
+import path from 'path';
+import fs from 'fs';
+
+import config from '../config';
 import createRoute from '../helpers/express/create-route';
 import logger from '../helpers/logger';
+import sendMail from '../helpers/mail-helper';
 
 import { middlewareClientPasswordStrategy } from '../auth/authenticate-passport';
 import oauth2TokenMiddlewares from '../auth/authorization-oauth2';
 import {
   signUp,
   signOut,
+  createResetPasswordToken,
+  resetPassword,
 } from '../services/service-auth';
 
+const htmlResetPassword = fs.readFileSync(path.resolve(__dirname, './auth-reset-password.html')).toString();
+const htmlResetPasswordSuccess = fs.readFileSync(path.resolve(__dirname, './auth-reset-password-success.html')).toString();
 
 /**
  [SIGNUP] Регитсрация нового пользователя
@@ -36,13 +45,34 @@ const router = createRoute(
         });
         return res.json(user);
       } catch (error) {
+        logger.error(error);
         if (error.errors) {
           // validation errors;
           // todo @ANKU @CRIT @MAIN - формат ошибок валидации
-          return res.status().json({
+          /*
+           The 412 (Precondition Failed) status code indicates that one or more
+           conditions given in the request header fields evaluated to false when
+           tested on the server. This response code allows the client to place
+           preconditions on the current resource state (its current
+           representations and metadata) and, thus, prevent the request method
+           from being applied if the target resource is in an unexpected state.
+           (http://tools.ietf.org/html/rfc7232#section-4.2)
+
+           The 422 (Unprocessable Entity) status code means the server
+           understands the content type of the request entity (hence a
+           415(Unsupported Media Type) status code is inappropriate), and the
+           syntax of the request entity is correct (thus a 400 (Bad Request)
+           status code is inappropriate) but was unable to process the contained
+           instructions. For example, this error condition may occur if an XML
+           request body contains well-formed (i.e., syntactically correct), but
+           semantically erroneous, XML instructions.
+           (http://tools.ietf.org/html/rfc4918#section-11.2)
+          */
+          return res.status(422).json({
             validationErrors: error.errors,
           });
         }
+        throw error;
       }
     },
   ],
@@ -164,41 +194,113 @@ createRoute(
       },
     } = req;
 
-    try {
-      const result = await signOut(userId);
-      return res.json(result);
-    } catch (error) {
-      return res.json(error);
-    }
+    return res.json(await signOut(userId));
   },
   {
-    method: 'get',
     router,
   },
 );
 
 
+/**
+ * [FORGOT] password
+ *
+ * @param email -
+ * @param emailSubject -
+ * @param emailHtmlTpl -
+ * @param resetPasswordPageUrl -
+ * @param client_id -
+ * @param client_password -
+ */
 createRoute(
-  '/signout',
-  async (req, res) => {
-    const {
-      user: {
-        userId,
-      },
-    } = req;
+  '/forgot',
+  [
+    // проверяем подлиность клиента
+    middlewareClientPasswordStrategy,
+    async (req, res) => {
+      const {
+        body: {
+          email,
+          emailSubject,
+          emailHtmlTpl, // необходимо добавить fullForgotPageUrl
+          emailOptions,
 
-    try {
-      const result = await signOut(userId);
-      return res.json(result);
-    } catch (error) {
-      return res.json(error);
-    }
-  },
+          resetPasswordPageUrl,
+          client_id,
+        },
+      } = req;
+
+      const token = await createResetPasswordToken(email, client_id);
+      // todo @ANKU @LOW - кейс когда есть еще query параметры и токен нужно энкодить
+      const fullResetPasswordPageUrl = `${resetPasswordPageUrl}?token=${token}`;
+
+      if (!config.common.isTest) {
+        await sendMail(
+          email,
+          emailSubject || 'Сброс пароля',
+          emailHtmlTpl
+          || (emailHtmlTpl !== false ? htmlResetPassword.replace(/{{URL}}/, fullResetPasswordPageUrl) : null),
+          emailOptions,
+        );
+      }
+
+      return res.json();
+    },
+  ],
   {
-    method: 'get',
+    method: 'post',
     router,
+    auth: false,
   },
 );
 
+/**
+ * [RESET] password
+ *
+ * @param resetPasswordToken -
+ * @param newPassword -
+ * @param successEmailSubject
+ * @param successEmailHtmlTpl
+ * @param successEmailOptions
+ * @param client_id -
+ * @param client_password -
+ */
+createRoute(
+  '/reset',
+  [
+    // проверяем подлиность клиента
+    middlewareClientPasswordStrategy,
+    async (req, res) => {
+      const {
+        body: {
+          successEmailSubject,
+          successEmailHtmlTpl, // необходимо добавить fullForgotPageUrl
+          successEmailOptions,
+
+          resetPasswordToken,
+          newPassword,
+        },
+      } = req;
+
+      const email = await resetPassword(resetPasswordToken, newPassword);
+
+      if (!config.common.isTest) {
+        await sendMail(
+          email,
+          successEmailSubject || 'Смена пароля',
+          successEmailHtmlTpl
+          || (successEmailHtmlTpl !== false ? htmlResetPasswordSuccess : null),
+          successEmailOptions,
+        );
+      }
+      return res.json();
+    },
+  ],
+  {
+    method: 'post',
+    router,
+    auth: false,
+  },
+);
 
 export default router;

@@ -3,6 +3,8 @@ import crypto from 'crypto';
 import validator from 'validator';
 import mongoose from 'mongoose';
 
+import { generateTokenValue } from '../../utils/common';
+
 export const UserSchema = new mongoose.Schema({
   // ======================================================
   // AUTH
@@ -46,6 +48,7 @@ export const UserSchema = new mongoose.Schema({
   },
   email: {
     type: String,
+    unique: true,
     lowercase: true,
     trim: true,
     validate: [
@@ -116,8 +119,8 @@ UserSchema.virtual('password')
   .set(function (password) {
     // todo @ANKU @LOW - _plainPassword
     this._plainPassword = password;
-    this.salt = crypto.randomBytes(32).toString('hex');
-    // более секьюрно - this.salt = crypto.randomBytes(128).toString('hex');
+    this.salt = generateTokenValue();
+    // более секьюрно - this.salt = generateTokenValue(128);
     this.hashedPassword = this.encryptPassword(password);
   })
   .get(function () {

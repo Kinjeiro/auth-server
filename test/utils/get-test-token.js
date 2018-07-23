@@ -10,13 +10,15 @@ import { GRANT_TYPE_PARAM_VALUES } from '../../src/auth/authorization-oauth2';
 export const testClient = CLIENTS.dashboard;
 export const testUser = USERS.ivanovI;
 
-export async function getTestToken(user = testUser, client = testClient) {
-  await fillDataBase({
-    Client: [client],
-    User: [user],
-  }, {
-    dropOther: true,
-  });
+export async function getTestToken(user = testUser, client = testClient, dropBase = true) {
+  if (dropBase) {
+    await fillDataBase({
+      Client: [client],
+      User: [user],
+    }, {
+      dropOther: true,
+    });
+  }
 
   const {
     body: {

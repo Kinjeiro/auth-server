@@ -3,6 +3,20 @@ import express from 'express';
 import { middlewareBearerStrategy } from '../../auth/authenticate-passport';
 
 /**
+ * Чтобы можно было внутри await использовать и правильно обрабатывать ошибки от них
+ * @param fn
+ * @return {function(*=, *=, *=, ...[*])}
+ */
+export function asyncHandlerWrapper(fn) {
+  return (req, res, next, ...args) => {
+    const fnReturn = fn(req, res, next, ...args);
+    return Promise
+      .resolve(fnReturn)
+      .catch(next);
+  };
+}
+
+/**
  * @param url
  * @param handler - (req, res) => {} - for req add "user" and "authInfo" properties throw BearerStrategy
  * @param opts
@@ -26,7 +40,10 @@ function createRoute(url, handler, opts = {}) {
     handlers.push(handler);
   }
 
-  router[method.toLowerCase()](url, ...handlers);
+  router[method.toLowerCase()](
+    url,
+    ...handlers.map((handlerItem) => asyncHandlerWrapper(handlerItem)),
+  );
 
   return router;
 }

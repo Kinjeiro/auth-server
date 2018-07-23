@@ -72,6 +72,44 @@ module.exports = {
           testUri: TEST_MONGO_URI,
         },
       },
+
+      mail: {
+        transportOptions: {
+          // service: 'SendGrid',
+          // FREE: 100 mails in month
+          host: 'smtp.sendgrid.net',
+          /*
+           Ports
+           25, 587  - (for unencrypted/TLS connections)
+           465      - (for SSL connections)
+           */
+          port: 587,
+
+          // security: false,
+
+          /*
+           Если не проставлять падает ошибка:
+           code=ESOCKET, command=CONN
+           Error: self signed certificate in certificate chain
+           at TLSSocket.onConnectSecure (_tls_wrap.js:1036:3
+           */
+          tls: {
+            rejectUnauthorized: false,
+          },
+
+          auth: {
+            user: 'apikey',
+            pass: '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',
+          },
+        },
+        messageOptions: {
+          from: 'kinjeiro@gmail.com',
+        },
+      },
+
+      resetPassword: {
+        tokenLife: 3600, // час
+      },
     },
   },
 };
