@@ -97,6 +97,11 @@ module.exports = {
             rejectUnauthorized: false,
           },
 
+          // connectionTimeout: 60000,
+          // greetingTimeout: 30000,
+          // // maxConnections: 10,
+          // debug: true,
+
           auth: {
             user: 'apikey',
             pass: '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',

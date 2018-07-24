@@ -13,16 +13,14 @@ function verifyTransport(transport) {
   return new Promise((resolve, reject) => {
     logger.debug(`Verify mail transport: ${transport.options.host}:${transport.options.port}`);
     try {
-      setTimeout(() => {
-        transport.verify((error, success) => {
-          if (error) {
-            logger.error('-- error transport', error);
-            return reject(error);
-          }
-          logger.debug('-- ok');
-          return resolve(transport);
-        });
-      }, 1000);
+      transport.verify((error, success) => {
+        if (error) {
+          logger.error('-- error transport', error);
+          return reject(error);
+        }
+        logger.debug('-- ok');
+        return resolve(transport);
+      });
     } catch (error) {
       reject(error);
     }
@@ -37,7 +35,6 @@ async function getTransport(options = null) {
   let transport = currentTransport;
 
   if (options || !transport) {
-    console.warn('ANKU , transport', transport);
     transport = nodemailer.createTransport(merge({}, DEFAULT_TRANSPORT_OPTIONS, options));
     await verifyTransport(transport);
     if (!options) {

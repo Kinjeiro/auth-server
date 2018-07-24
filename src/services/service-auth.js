@@ -106,7 +106,6 @@ export function signUp(userData) {
     // use schema.create to insert data into the db
     User.create(userData, (error, user) => {
       // todo @ANKU @CRIT @MAIN -
-      console.warn('ANKU , user', user);
       if (error) {
         logger.error(error);
 
