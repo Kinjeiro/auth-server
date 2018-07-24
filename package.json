@@ -20,13 +20,15 @@
     "test": "cross-env NODE_ENV=test mocha --require babel-register ./test/test-runner.js",
     "test:watch": "npm run test -- --watch",
     "compile": "rimraf lib/* -f && babel src --out-dir lib --copy-files",
-    "prepublish": "npm run compile",
-    "publish-patch": "npm run release-patch && npm publish --access public",
+
+    "publish-patch": "npm run release-patch && npm publish",
+    "publish-patch-r": "git push --follow-tags && npm publish",
     "release-patch": "npm version patch -m \"chore(*) patch version: %s\"",
     "release-minor": "npm version minor -m \"chore(*) minor version: %s\"",
     "release-major": "npm version major -m \"chore(*) major version: %s\"",
     "preversion": "npm run mongo:run:windows && npm run test",
-    "postversion": "git add package.json && git commit -m \"new version\" && git push --follow-tags"
+    "version": "npm run compile && git add -A",
+    "postversion": "git push --follow-tags"
   },
   "dependencies": {
     "babel-plugin-transform-class-properties": "~6.24.1",
