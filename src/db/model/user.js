@@ -51,6 +51,7 @@ export const UserSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
     trim: true,
+    // match: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
     validate: [
       (email) => validator.isEmail(email, { require_tld: false }),
       'Please fill a valid email address',

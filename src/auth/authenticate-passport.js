@@ -17,6 +17,7 @@ import {
 } from '../services/service-auth';
 
 const STRATEGY__CLIENT_PASSWORD = 'oauth2-client-password';
+// todo @ANKU @LOW - вообще странное решение брать из req.body я бы знанчения клал в header чтобы изолировать их от основных данных + можно оформить как авторизацию API KEY (переписать стратегию)
 passport.use(new ClientPasswordStrategy(
   async (clientId, clientSecret, done) => {
     try {

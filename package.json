@@ -52,8 +52,10 @@
     "passport-http-bearer": "~1.0.x",
     "passport-oauth2-client-password": "~0.1.x",
     "rimraf": "~2.6.2",
+    "swagger-ui-express": "~3.0.10",
     "validator": "~8.2.0",
-    "winston": "~0.8.x"
+    "winston": "~0.8.x",
+    "yamljs": "~0.3.0"
   },
   "devDependencies": {
     "babel-cli": "~6.26.0",

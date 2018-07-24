@@ -1,0 +1,407 @@
+openapi: 3.0.0
+# https://swagger.io/docs/specification/basic-structure/
+
+info:
+  version: 1.0.0
+  title: NodeJs Auth server
+  license:
+    name: Reagentum Front Core
+
+components:
+  securitySchemes:
+    oAuth2Password:
+      type: oauth2
+      description: Авторизация по токену по протоколу OAuth 2.0 + проверки подлиности client (приложения)
+      flows:
+        password:
+          tokenUrl: /api/auth/signin
+          refreshUrl: /api/auth/signin
+          scopes:
+            auth: All auth scopes
+
+  schemas:
+    User:
+      description: Пользователь
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+      required:
+         - username
+
+paths:
+# ===========================
+# ======== HEALTH ===========
+# ===========================
+  /api/helath:
+    get:
+      summary: Тест доступности сервера без авторизации
+      responses:
+        '200':
+          description: Ok
+
+
+# ===========================
+# ======= SIGN UP ===========
+# ===========================
+  /api/auth/signup:
+    post:
+      summary: Регистрация нового пользователя
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userData:
+                  $ref: '#/components/schemas/User'
+                  description: пользовательские данные
+                client_id:
+                  type: string
+                  description: для проверки подлинности клиента
+                client_password:
+                  type: string
+                  description: для проверки подлинности клиента
+              required:
+                - userData
+                - client_id
+                - client_password
+
+      responses:
+        '200':
+          description: A user object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+
+# ===========================
+# ======= SIGN IN ===========
+# ===========================
+  /api/auth/signin:
+    post:
+      summary: Авторизация - получение токенов доступа
+      description: >
+        Дальше их используют для получение информации о пользователе (/user)
+        Стек проверки:
+
+          1. Стратегия 'oauth2-client-password' определения подлинности клиента (приложения) по client_id и client_secret
+
+          2. [signin] - генерация токенов доступа
+          ```
+          Request:
+          {
+            grant_type: 'password',
+            client_id: 'myApplication',
+            client_secret: 'myApplicationSecretWord',
+          }
+          ```
+          Credentials пользователя можно получить двумя способами:
+
+          2.1. Стетегия grant_type: 'password' - из значение в теле username: 'testUserName' \ password: 'testUserNamePassword',
+          ```
+          Request:
+          {
+            grant_type: 'password',
+            client_id: 'myApplication',
+            client_secret: 'myApplicationSecretWord',
+            username: 'testUserName',
+            password: 'testUserNamePassword',
+          }
+          ```
+          или
+
+          2.2. Стратегия 'basic' (если headers.authorization: `Basic <base64-encoded credentials>`) - по кренедшелам из заголовка
+
+          3. [refresh] Стетегия grant_type: 'refresh_token' - обновления access_token по refresh_token
+          ```
+          Request:
+          {
+            grant_type: 'refresh_token',
+            client_id: 'myApplication',
+            client_secret: 'myApplicationSecretWord',
+            refresh_token: 'user_refresh_token',
+          }
+          ```
+      tags:
+        - auth
+#      security:
+#        - oAuth2Password: [auth]
+
+      parameters:
+        - in: header
+          name: authorization
+          schema:
+            type: string
+            required: false
+          description: если крендешиался поступают через basic
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                grant_type:
+                  type: string
+                client_id:
+                  type: string
+                  description: для проверки подлинности клиента
+                client_password:
+                  type: string
+                  description: для проверки подлинности клиента
+                username:
+                  type: string
+                  description: для получения токенов доступа
+                password:
+                  type: string
+                  description: для получения токенов доступа
+                refresh_token:
+                  type: string
+                  description: для обновления access_token
+              required:
+                - grant_type
+                - client_id
+                - client_password
+              example:
+                grant_type: 'password'
+                client_id: 'myApplication'
+                client_secret: 'myApplicationSecretWord'
+                username: 'testUserName'
+                password: 'testUserNamePassword'
+# // todo @ANKU @LOW - не работает scheme.examples
+#              examples:
+#                token:
+#                  value:
+#                    grant_type: 'password3'
+#                    client_id: 'myApplication'
+#                    client_secret: 'myApplicationSecretWord'
+#                    username: 'testUserName'
+#                    password: 'testUserNamePassword'
+#                    refresh_token: 'refresh_token'
+#                refresh:
+#                  summary: проделение токена, если assecc истек (обычно через 5 минут)
+#                  value:
+#                    grant_type: 'refresh_token'
+#                    client_id: 'myApplication'
+#                    client_secret: 'myApplicationSecretWord'
+#                    refresh_token: 'user_refresh_token'
+      responses:
+        '200':
+          description: Токены доступа и обновления
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+                  expires_in:
+                    type: number
+                    description: seconds
+                  token_type:
+                    type: string
+                    description: "Bearer"
+                example:
+                  access_token: "395549ac90cd6f37cbc28c6cb5b31aa8ffe2a22826831dba11d6baae9dafb07a"
+                  refresh_token: "857896e0aab5b35456f6432ef2f812a344e2a3bab12d38b152ee3dd968442613"
+                  expires_in: 299 #, (seconds)
+                  token_type: "Bearer"
+
+# ===========================
+# ========= USER ============
+# ===========================
+  /api/auth/user:
+    get:
+      summary: Проверка по access_token информации о валидности прав доступа пользователя.
+      description: >
+        Если все актуально возвращается информация о пользователе
+
+
+        Благодаря STRATEGY__BEARER_TOKEN - Стартегия 'bearer' (если headers.authorization: `Bearer <OAuth 2.0 token>`) - по токену возвращает пользователя
+         (подключенаются в методе createRoute (если auth!==false) - handlers.push(middlewareBearerStrategy))
+         ищется в базе токен и по нему ищется пользователь
+      tags:
+        - auth
+      security:
+        - oAuth2Password: [auth]
+
+      parameters:
+        - in: header
+          name: authorization
+          schema:
+            type: string
+            required: true
+          description: \"Bearer <OAuth 2.0 token>\" - access_token
+
+      responses:
+        '200':
+          description: Если токен валидный, возвращает пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+
+# ===========================
+# ======= SIGN OUT ==========
+# ===========================
+  /api/auth/signout:
+    get:
+      summary: выход, удаление всех токенов доступа
+      tags:
+        - auth
+      security:
+        - oAuth2Password: [auth]
+
+      parameters:
+        - in: header
+          name: authorization
+          schema:
+            type: string
+            required: true
+          description: \"Bearer <OAuth 2.0 token>\" - access_token
+
+      responses:
+        '200':
+          description: Пользователь разлогинен
+
+
+# ===========================
+# ======= FORGOT  ===========
+# ===========================
+  /api/auth/forgot:
+    post:
+      summary: Забыли пароль? Отправку на почту токена для смены пароля
+      description: >
+        После того как у себя сделаете страницы смены пароля, нужно отослалть его вместе с этим токеном
+        обратно на авторизационный сервер /api/auth/reset
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: Email существующего пользователя на которой отошлется письмо с урлом и токеном замены пароля
+                emailSubject:
+                  type: string
+                  description: Тема письма
+                emailHtmlTpl:
+                  type: string
+                  description: >
+                    Шаблон письма пользователю (нужно обязательно добавить ```{{URL}}```, куда вставится ссылка с токеном для сброса пароля ```?token=<reset password token>```
+                    ```
+                    <pre>
+                      <div>
+                        <a href="{{URL}}">
+                          Сменить пароль
+                        </a>
+                      </div>
+                    </pre>
+                    ```
+                    Превратится в
+                    ```
+                    <pre>
+                      <div>
+                        <a href="http://myapp.com/reset?token=857896e0aab5b35456f6432ef2f812a344e2a3bab12d38b152ee3dd968442613">
+                          Сменить пароль
+                        </a>
+                      </div>
+                    </pre>
+                    ```
+                emailOptions:
+                  description: https://nodemailer.com/message/
+                  type: object
+                resetPasswordPageUrl:
+                  type: string,
+                  description: >
+                    Урл по которому пользователь кликнет в письме, чтобы сменить пароль
+                    Система к этому урлу добавит query параметр token (reset password token)
+                    http://myapp.com/reset?token=857896e0aab5b35456f6432ef2f812a344e2a3bab12d38b152ee3dd968442613
+                client_id:
+                  type: string
+                  description: для проверки подлинности клиента
+                client_password:
+                  type: string
+                  description: для проверки подлинности клиента
+              required:
+                - email
+                - resetPasswordPageUrl
+                - client_id
+                - client_password
+              example:
+                email: 'test@user.com'
+                emailSubject: 'Сброс пароля'
+                emailHtmlTpl: '<div><a href="{{URL}}">Сменить пароль</a></div>'
+                emailHtmlTpl: { priority: 'high' }
+                resetPasswordPageUrl: 'http://myapp.com/reset'
+                client_id: 'webServer1'
+                client_password: 'webServer1SecretWord'
+
+      responses:
+        '200':
+          description: Письмо успешно отослано
+
+# ===========================
+# ======== RESET ============
+# ===========================
+  /api/auth/reset:
+    post:
+      summary: Установка нового пароля для пользователя
+      description: >
+        Сначала необходимо отправить на почту письмо с токеном сброса пароля с помощью апи ```/api/auth/forgot```
+        Потом на своей форме ввода ного пароля вызвать этот апи и отослать новый пароль и токен из query параметра ```token```
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resetPasswordToken:
+                  type: string
+                  description: Токен пришедший в query параметре token из письма
+                newPassword:
+                  type: string
+                  description: Новый пароль
+
+                successEmailSubject:
+                  type: string
+                  description: Тема письма
+                successEmailHtml:
+                  type: string
+                  description: Тело письма, что пароль успешно обновлен
+                successEmailOptions:
+                  type: object
+                  description: https://nodemailer.com/message/
+
+                client_id:
+                  type: string
+                  description: для проверки подлинности клиента
+                client_password:
+                  type: string
+                  description: для проверки подлинности клиента
+              required:
+                - resetPasswordToken
+                - newPassword
+                - client_id
+                - client_password
+      responses:
+        '200':
+          description: Пароль обновлен. Письмо об успешности смены пароля отослано

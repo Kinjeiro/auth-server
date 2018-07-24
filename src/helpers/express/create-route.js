@@ -8,12 +8,14 @@ import { middlewareBearerStrategy } from '../../auth/authenticate-passport';
  * @return {function(*=, *=, *=, ...[*])}
  */
 export function asyncHandlerWrapper(fn) {
-  return (req, res, next, ...args) => {
-    const fnReturn = fn(req, res, next, ...args);
-    return Promise
-      .resolve(fnReturn)
-      .catch(next);
-  };
+  return typeof fn === 'function'
+    ? (req, res, next, ...args) => {
+      const fnReturn = fn(req, res, next, ...args);
+      return Promise
+        .resolve(fnReturn)
+        .catch(next);
+    }
+    : fn;
 }
 
 /**

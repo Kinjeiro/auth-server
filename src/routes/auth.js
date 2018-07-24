@@ -19,13 +19,7 @@ const htmlResetPassword = fs.readFileSync(path.resolve(__dirname, './auth-reset-
 const htmlResetPasswordSuccess = fs.readFileSync(path.resolve(__dirname, './auth-reset-password-success.html')).toString();
 
 /**
- [SIGNUP] Регитсрация нового пользователя
-
- @param client_id - для проверки подлинности клиента
- @param client_secret - для проверки подлинности клиента
- @param userData {user} - пользовательские данные (@see ./src/model/user.js)
-
- @return {userInfo}
+ * @see - \src\routes\api-docs\swagger.yaml
  */
 const router = createRoute(
   '/signup',
@@ -83,61 +77,8 @@ const router = createRoute(
 );
 
 /**
- [SIGNIN] Авторизация - получение токенов доступа
-
- Дальше их используют для получение информации о пользователе (/user)
-
- @param grant_type - одно из @see \src\auth\authorization-oauth2.js::GRANT_TYPE_PARAM_VALUES
- @param client_id - индификатор приложения из которого приходит запрос (мобильное приложение, сервер и так далее)
- @param client_secret - секретное слово для app client
- @param username - для получения токенов доступа
- @param password - для получения токенов доступа
- @param refresh_token - для обновления access_token
-
- @header authorization - если крендешиался поступают через basic \ либо в теле через "username \ password"
-
- Стек проверки:
- 1) Стратегия 'oauth2-client-password' определения подлинности клиента (приложения) по client_id и client_secret
-
- 2) [signin] - генерация токенов доступа
-   Request:
-   {
-      grant_type: 'password',
-      client_id: 'myApplication',
-      client_secret: 'myApplicationSecretWord',
-   }
-
- Credentials пользователя можно получить двумя способами:
- 2.1) Стетегия grant_type: 'password' - из значение в теле username: 'testUserName' \ password: 'testUserNamePassword',
-   Request:
-   {
-    grant_type: 'password',
-    client_id: 'myApplication',
-    client_secret: 'myApplicationSecretWord',
-    username: 'testUserName',
-    password: 'testUserNamePassword',
-   }
- или
- 2.2) Стратегия 'basic' (если headers.authorization: `Basic <base64-encoded credentials>`) - по кренедшелам из заголовка
-
- 3) [refresh] Стетегия grant_type: 'refresh_token' - обновления access_token по refresh_token
-   Request:
-   {
-    grant_type: 'refresh_token',
-    client_id: 'myApplication',
-    client_secret: 'myApplicationSecretWord',
-    refresh_token: 'user_refresh_token',
-   }
-
-
- @return объект токенов для складирования в http-only куки
- {
-   "access_token": "395549ac90cd6f37cbc28c6cb5b31aa8ffe2a22826831dba11d6baae9dafb07a",
-   "refresh_token": "857896e0aab5b35456f6432ef2f812a344e2a3bab12d38b152ee3dd968442613",
-   "expires_in": 299, (seconds)
-   "token_type": "Bearer"
- }
-*/
+ * @see - \src\routes\api-docs\swagger.yaml
+ */
 createRoute(
   '/signin',
   oauth2TokenMiddlewares,
@@ -149,17 +90,8 @@ createRoute(
 );
 
 /**
- [validate] Проверка по access_token информации о валидности прав доступа пользователя.
- Если все актуально возвращается информация о пользователе
-
- @header authorization: `Bearer <OAuth 2.0 token>` - access_token
-
- Благодаря STRATEGY__BEARER_TOKEN - Стартегия 'bearer' (если headers.authorization: `Bearer <OAuth 2.0 token>`) - по токену возвращает пользователя
- (подключенаются в методе createRoute (если auth!==false) - handlers.push(middlewareBearerStrategy))
- ищется в базе токен и по нему ищется пользователь
-
- @return {userInfo} - информация о пользователе
-*/
+ * @see - \src\routes\api-docs\swagger.yaml
+ */
 createRoute(
   '/user',
   (req, res) => {
@@ -181,9 +113,7 @@ createRoute(
 );
 
 /**
- [SIGNOUT] - выход, удаление всех токенов доступа
-
- @header - authorization: `Bearer <OAuth 2.0 token>` - access_token
+ * @see - \src\routes\api-docs\swagger.yaml
  */
 createRoute(
   '/signout',
@@ -203,14 +133,7 @@ createRoute(
 
 
 /**
- * [FORGOT] password
- *
- * @param email -
- * @param emailSubject -
- * @param emailHtmlTpl -
- * @param resetPasswordPageUrl -
- * @param client_id -
- * @param client_password -
+ * @see - \src\routes\api-docs\swagger.yaml
  */
 createRoute(
   '/forgot',
@@ -255,15 +178,7 @@ createRoute(
 );
 
 /**
- * [RESET] password
- *
- * @param resetPasswordToken -
- * @param newPassword -
- * @param successEmailSubject
- * @param successEmailHtmlTpl
- * @param successEmailOptions
- * @param client_id -
- * @param client_password -
+ * @see - \src\routes\api-docs\swagger.yaml
  */
 createRoute(
   '/reset',
@@ -274,7 +189,7 @@ createRoute(
       const {
         body: {
           successEmailSubject,
-          successEmailHtmlTpl, // необходимо добавить fullForgotPageUrl
+          successEmailHtml, // необходимо добавить fullForgotPageUrl
           successEmailOptions,
 
           resetPasswordToken,
@@ -288,8 +203,8 @@ createRoute(
         await sendMail(
           email,
           successEmailSubject || 'Смена пароля',
-          successEmailHtmlTpl
-          || (successEmailHtmlTpl !== false ? htmlResetPasswordSuccess : null),
+          successEmailHtml
+          || (successEmailHtml !== false ? htmlResetPasswordSuccess : null),
           successEmailOptions,
         );
       }
