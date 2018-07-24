@@ -15,7 +15,7 @@
     "mongo:mock": "node --require babel-register ./test/mock/generateDBData.js",
     "mongo:run:unix": "mongod --fork --port 27017 && npm run mongo:mock",
     "mongo:install:windows": "mongod --install --serviceName \"MongoDB\" --dbpath \"D:\\mongodb\\db\" --logpath \"D:\\mongodb\\logs\\mongo.log\"",
-    "mongo:run:windows": "net start MongoDB && npm run mongo:mock",
+    "mongo:run:windows": "net start MongoDB || echo 'Уже запущена' && npm run mongo:mock",
     "mongo:stop:windows": "net stop MongoDB",
     "test": "cross-env NODE_ENV=test mocha --require babel-register ./test/test-runner.js",
     "test:watch": "npm run test -- --watch",
@@ -25,7 +25,7 @@
     "release-patch": "npm version patch -m \"chore(*) patch version: %s\"",
     "release-minor": "npm version minor -m \"chore(*) minor version: %s\"",
     "release-major": "npm version major -m \"chore(*) major version: %s\"",
-    "preversion": "npm run test",
+    "preversion": "npm run mongo:run:windows && npm run test",
     "postversion": "git add package.json && git commit -m \"new version\" && git push --follow-tags"
   },
   "dependencies": {
