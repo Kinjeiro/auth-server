@@ -1,5 +1,5 @@
-import health from './health';
-import auth from './auth';
+import health from './health/health';
+import auth from './auth/auth';
 import apiDocs from './api-docs/router-api-docs';
 
 export const API_PREFIX = 'api';

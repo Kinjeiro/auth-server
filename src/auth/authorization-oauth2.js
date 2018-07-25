@@ -4,6 +4,7 @@ import oauth2orize from 'oauth2orize';
 import { generateTokenValue } from '../utils/common';
 import config from '../config';
 import logger from '../helpers/logger';
+import { getProjectIdFromScope } from '../helpers/request-data';
 
 import {
   User,
@@ -56,9 +57,11 @@ authServer.exchange(
   // \node_modules\oauth2orize\lib\exchange\password.js
   oauth2orize.exchange.password(
     async (client, username, password, scope, done) => {
-      logger.info(`(Authorization)[Client "${client.clientId}"] generate access_token for user "${username}"`);
       try {
-        const user = await findUserByName(username, password);
+        const projectId = client.clientId || getProjectIdFromScope(scope);
+        logger.info(`(Authorization)[Client "${client.clientId}"] generate access_token for user "${username}" [${projectId}]`);
+
+        const user = await findUserByName(projectId, username, password);
         if (!user) {
           return done(null, false);
         }

@@ -6,7 +6,7 @@ import YAML from 'yamljs';
 // import createRoute from '../../helpers/express/create-route';
 
 export default function appMiddlewareApiDocs(app, prefix) {
-  const swaggerDocument = YAML.load(path.resolve(__dirname, './swagger.yaml'));
+  const swaggerDocument = YAML.load(path.resolve(__dirname, '../swagger.yaml'));
 
   app.use(
     prefix,

@@ -11,7 +11,7 @@ import './db/init-models';
 import { connect } from './db/db-utils';
 
 import { expressPlugin as authenticatePlugin } from './auth/authenticate-passport';
-import applyRoutes from './routes';
+import applyRoutes from './api';
 
 const debugRestApi = debug('restapi');
 

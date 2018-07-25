@@ -2,20 +2,21 @@ import {
   getTestToken,
   testClient,
   testUser,
-} from '../../test/utils/get-test-token';
+} from '../../../test/utils/get-test-token';
 
-import config from '../config';
-import logger from '../helpers/logger';
+import config from '../../config';
+import logger from '../../helpers/logger';
 
-import { fillDataBase } from '../db/db-utils';
-import { createResetPasswordToken } from '../services/service-auth';
+import { fillDataBase } from '../../db/db-utils';
+import { createResetPasswordToken } from '../../services/service-auth';
 
-import { GRANT_TYPE_PARAM_VALUES } from '../auth/authorization-oauth2';
+import { GRANT_TYPE_PARAM_VALUES } from '../../auth/authorization-oauth2';
 
 describe('[api] auth', () => {
   describe('[route] /api/auth/signup', () => {
     const testNewUser = {
       username: 'newTestUser',
+      email: 'newTestUser@opa.com',
     };
     before(async () => {
       await fillDataBase({
@@ -59,6 +60,49 @@ describe('[api] auth', () => {
         expect(errorResponse.status).to.equal(401);
         expect(errorResponse.message).to.equal('Unauthorized');
       }
+    });
+
+    it('should throw 422 user with username already exist', async () => {
+      try {
+        await chai.request(server)
+          .post('/api/auth/signup')
+          .send({
+            client_id: testClient.clientId,
+            client_secret: testClient.clientSecret,
+            userData: {
+              ...testNewUser,
+              username: testUser.username,
+            },
+          });
+        expect(true).to.be.false;
+      } catch (errorResponse) {
+        expect(errorResponse.response.body.status).to.equal(422);
+        expect(Object.keys(errorResponse.response.body.validationErrors)).has.length(1);
+        expect(errorResponse.response.body.validationErrors.username)
+          .to.equal(`Пользователь с логином "${testUser.username}" уже существует`);
+      }
+    });
+
+    it('should create user with the exist username but new projectId', async () => {
+      const {
+        status,
+        body: newUser,
+      } = await chai.request(server)
+        .post('/api/auth/signup')
+        .set('project_id', 'otherProjectId')
+        .send({
+          client_id: testClient.clientId,
+          client_secret: testClient.clientSecret,
+          userData: {
+            ...testNewUser,
+            username: testUser.username,
+          },
+        });
+
+      expect(status).to.equal(200);
+      expect(newUser).is.exist();
+      expect(newUser.username).to.equal(testUser.username);
+      expect(newUser.projectId).to.equal('otherProjectId');
     });
   });
 
@@ -331,7 +375,7 @@ describe('[api] auth', () => {
         dropOther: true,
       });
       accessToken = await getTestToken(testUser, testClient, false);
-      resetToken = await createResetPasswordToken(testUser.email, testClient.clientId);
+      resetToken = await createResetPasswordToken(testClient.clientId, testUser.email, testClient.clientId);
       logger.debug('Start test: [route] /api/auth/reset', '\n');
     });
 

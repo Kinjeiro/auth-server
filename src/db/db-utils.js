@@ -68,7 +68,11 @@ async function clearCollection(Model) {
   // Бывает что коллекции и нет и тогда при дропе падает ошибка: "MongoError: ns not found"
   // await collection.drop();
   // проше всех удалить
-  const { result: { n: count } } = await Model.remove({});
+  const {
+    result: {
+      n: count,
+    },
+  } = await Model.remove({});
   logger.info(`Drop "${Model.collection.collectionName}" collection ${count > 0 ? `(remove ${count} docs)` : ''}`);
 }
 

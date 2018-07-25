@@ -1,19 +1,20 @@
 import path from 'path';
 import fs from 'fs';
 
-import config from '../config';
-import createRoute from '../helpers/express/create-route';
-import logger from '../helpers/logger';
-import sendMail from '../helpers/mail-helper';
+import config from '../../config';
+import createRoute from '../../helpers/express/create-route';
+import logger from '../../helpers/logger';
+import sendMail from '../../helpers/mail-helper';
+import { getProjectId } from '../../helpers/request-data';
 
-import { middlewareClientPasswordStrategy } from '../auth/authenticate-passport';
-import oauth2TokenMiddlewares from '../auth/authorization-oauth2';
+import { middlewareClientPasswordStrategy } from '../../auth/authenticate-passport';
+import oauth2TokenMiddlewares from '../../auth/authorization-oauth2';
 import {
   signUp,
   signOut,
   createResetPasswordToken,
   resetPassword,
-} from '../services/service-auth';
+} from '../../services/service-auth';
 
 const htmlResetPassword = fs.readFileSync(path.resolve(__dirname, './auth-reset-password.html')).toString();
 const htmlResetPasswordSuccess = fs.readFileSync(path.resolve(__dirname, './auth-reset-password-success.html')).toString();
@@ -29,14 +30,13 @@ const router = createRoute(
     // создаем пользователя
     async (req, res) => {
       const {
-        client_id,
-        userData,
-      } = req.body;
+        body: {
+          client_id,
+          userData,
+        },
+      } = req;
       try {
-        const user = await signUp({
-          provider: client_id,
-          ...userData,
-        });
+        const user = await signUp(userData, client_id, getProjectId(req));
         return res.json(user);
       } catch (error) {
         logger.error(error);
@@ -63,6 +63,7 @@ const router = createRoute(
            (http://tools.ietf.org/html/rfc4918#section-11.2)
           */
           return res.status(422).json({
+            status: 422,
             validationErrors: error.errors,
           });
         }
@@ -153,7 +154,7 @@ createRoute(
         },
       } = req;
 
-      const token = await createResetPasswordToken(email, client_id);
+      const token = await createResetPasswordToken(getProjectId(req), email, client_id);
       // todo @ANKU @LOW - кейс когда есть еще query параметры и токен нужно энкодить
       const fullResetPasswordPageUrl = `${resetPasswordPageUrl}?token=${token}`;
 
@@ -188,12 +189,12 @@ createRoute(
     async (req, res) => {
       const {
         body: {
-          successEmailSubject,
-          successEmailHtml, // необходимо добавить fullForgotPageUrl
-          successEmailOptions,
-
           resetPasswordToken,
           newPassword,
+
+          successEmailSubject,
+          successEmailHtml,
+          successEmailOptions,
         },
       } = req;
 

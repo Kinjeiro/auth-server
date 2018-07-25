@@ -6,6 +6,7 @@ import BearerStrategy from 'passport-http-bearer';
 
 import config from '../config';
 import logger from '../helpers/logger';
+import { getProjectId } from '../helpers/request-data';
 
 import {
   AccessToken,
@@ -32,10 +33,14 @@ passport.use(new ClientPasswordStrategy(
 
 const STRATEGY__BASIC_USER_PASSWORD = 'basic';
 passport.use(new BasicStrategy(
-  async (username, password, done) => {
+  {
+    passReqToCallback: true,
+  },
+  async (req, username, password, done) => {
     try {
-      logger.info(`(Authenticate Basic) Check user ${username}`);
-      const user = await findUserByName(username, password);
+      const projectId = getProjectId(req);
+      logger.info(`(Authenticate Basic) Check user ${username} [${projectId}]`);
+      const user = await findUserByName(projectId, username, password);
       done(null, user);
     } catch (error) {
       done(error);

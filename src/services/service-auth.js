@@ -1,14 +1,21 @@
 import omit from 'lodash/omit';
+import pick from 'lodash/pick';
 
 import { generateTokenValue } from '../utils/common';
 import config from '../config';
 import logger from '../helpers/logger';
+import ValidationError from '../models/ValidationError';
 
 import Client from '../db/model/client';
 import AccessToken from '../db/model/accessToken';
 import RefreshToken from '../db/model/refreshToken';
 import ResetPasswordToken from '../db/model/resetPasswordToken';
-import User, { PASSWORD_ATTRS } from '../db/model/user';
+import {
+  User,
+  PASSWORD_ATTRS,
+  PUBLIC_EDITABLE_ATTRS,
+  UNIQUE_ATTRS,
+} from '../db/model/user';
 
 export function validateApplicationClient(clientId, clientSecret, throwError = false) {
   return new Promise((resolve, reject) => {
@@ -36,7 +43,7 @@ export function validateApplicationClient(clientId, clientSecret, throwError = f
   });
 }
 
-function findUser(byId, idOrQueryMap, password = null, returnRecord = false) {
+function findUser(byId, projectId, idOrQueryMap, password = null, returnRecord = false) {
   return new Promise((resolve, reject) => {
     const omitAttrs = [
       'providerData',
@@ -50,7 +57,10 @@ function findUser(byId, idOrQueryMap, password = null, returnRecord = false) {
       .join(' ');
 
     const name = typeof idOrQueryMap === 'object'
-      ? JSON.stringify(idOrQueryMap)
+      ? JSON.stringify({
+        ...idOrQueryMap,
+        projectId,
+      })
       : idOrQueryMap;
 
     function findUserHandler(err, user) {
@@ -78,81 +88,106 @@ function findUser(byId, idOrQueryMap, password = null, returnRecord = false) {
     if (byId) {
       User.findById(idOrQueryMap, omitQuery, findUserHandler);
     } else {
-      User.findOne(idOrQueryMap, omitQuery, findUserHandler);
+      if (!projectId) {
+        return reject(new Error('"projectId" doesn\'t set'));
+      }
+      User.findOne(
+        {
+          ...idOrQueryMap,
+          projectId,
+        },
+        omitQuery,
+        findUserHandler,
+      );
     }
   });
 }
 
-export function findUserByName(username, password = null, returnRecord = false) {
-  return findUser(false, { username }, password, returnRecord);
+export function findUserByName(projectId, username, password = null, returnRecord = false) {
+  return findUser(false, projectId, { username }, password, returnRecord);
 }
 export function findUserById(userId, password = null, returnRecord = false) {
-  return findUser(true, userId, password, returnRecord);
+  return findUser(true, null, userId, password, returnRecord);
 }
-export function findUserByEmail(email, returnRecord = false) {
-  return findUser(false, { email: email.toLowerCase() }, null, returnRecord);
+export function findUserByEmail(projectId, email, returnRecord = false) {
+  return email
+    ? findUser(false, projectId, { email: email.toLowerCase() }, null, returnRecord)
+    : Promise.resolve(null);
 }
 
 
 // ======================================================
 // SIGNUP
 // ======================================================
-export function signUp(userData) {
-  logger.info(`[signUp] new user "${userData.username}"`);
-  return new Promise((resolve, reject) => {
-    // user.validate(function(error) {
-    // });
+export async function signUp(userData, provider, projectId) {
+  const userDataFinal = {
+    ...pick(userData, PUBLIC_EDITABLE_ATTRS),
+    provider,
+    projectId,
+  };
+  const {
+    username,
+    email,
+  } = userDataFinal;
 
-    // use schema.create to insert data into the db
-    User.create(userData, (error, user) => {
-      // todo @ANKU @CRIT @MAIN -
-      if (error) {
-        logger.error(error);
+  logger.info(`[signUp] new user "${username}" [${projectId}]`);
 
-        // error.errors
-        /*
-         {
-         "salt": {
-         "message": "Path `salt` is required.",
-         "name": "ValidatorError",
-         "properties": {
-         "type": "required",
-         "message": "Path `{PATH}` is required.",
-         "path": "salt"
-         },
-         "kind": "required",
-         "path": "salt",
-         "$isValidatorError": true
-         },
-         "hashedPassword": {
-         "message": "Path `hashedPassword` is required.",
-         "name": "ValidatorError",
-         "properties": {
-         "type": "required",
-         "message": "Path `{PATH}` is required.",
-         "path": "hashedPassword"
-         },
-         "kind": "required",
-         "path": "hashedPassword",
-         "$isValidatorError": true
-         }
-         }
-         */
-        // todo @ANKU @LOW - формат для json
-        return reject(error);
-      }
-      return resolve(user);
-    });
-  });
+  if (await findUserByName(projectId, username)) {
+    throw new ValidationError('username', `Пользователь с логином "${username}" уже существует`);
+  }
+  if (email && await findUserByEmail(projectId, email)) {
+    throw new ValidationError('email', `Пользователь с email "${email}" уже существует`);
+  }
+  // todo @ANKU @LOW - остальные UNIQUE_ATTRS
+  // const existUser = await User.findOne({
+  //   ...UNIQUE_ATTRS,
+  //   projectId,
+  // }).exec();
+
+  const newUser = new User(userDataFinal);
+  await newUser.save();
+
+  // error.errors
+  /*
+   {
+   "salt": {
+   "message": "Path `salt` is required.",
+   "name": "ValidatorError",
+   "properties": {
+   "type": "required",
+   "message": "Path `{PATH}` is required.",
+   "path": "salt"
+   },
+   "kind": "required",
+   "path": "salt",
+   "$isValidatorError": true
+   },
+   "hashedPassword": {
+   "message": "Path `hashedPassword` is required.",
+   "name": "ValidatorError",
+   "properties": {
+   "type": "required",
+   "message": "Path `{PATH}` is required.",
+   "path": "hashedPassword"
+   },
+   "kind": "required",
+   "path": "hashedPassword",
+   "$isValidatorError": true
+   }
+   }
+   */
+
+  const resultUser = newUser.toJSON();
+  return omit(resultUser, PASSWORD_ATTRS);
 }
 
-// ======================================================
-// SIGNIN
-// ======================================================
-export function signIn(username, password) {
-  logger.info(`[signIn] user "${username}"`);
-  return findUserByName(username, password);
-}
+// // ======================================================
+// // SIGNIN
+// // ======================================================
+// export function signIn(projectId, username, password) {
+//   logger.info(`[signIn] user "${username}" [${projectId}]`);
+//   return findUserByName(projectId, username, password);
+// }
 
 // ======================================================
 // SIGNOUT
@@ -186,9 +221,9 @@ export function signOut(userId) {
 // ======================================================
 // FORGOT
 // ======================================================
-export async function createResetPasswordToken(email, clientId) {
-  logger.info(`[createResetPasswordToken] for email "${email}"`);
-  const user = await findUserByEmail(email);
+export async function createResetPasswordToken(projectId, email, clientId) {
+  logger.info(`[createResetPasswordToken] for email "${email}" [${projectId}]`);
+  const user = await findUserByEmail(projectId, email);
   if (user === null) {
     throw new Error(`User with "${email}" email doesn't found`);
   }

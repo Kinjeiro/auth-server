@@ -5,13 +5,36 @@ import mongoose from 'mongoose';
 
 import { generateTokenValue } from '../../utils/common';
 
+export const PUBLIC_EDITABLE_ATTRS = [
+  'username',
+  'firstName',
+  'lastName',
+  'middleName',
+  'displayName',
+  'email',
+  'phone',
+  'profileImageURI',
+];
+
+export const UNIQUE_ATTRS = [
+  'username',
+  'email',
+];
+
+export const PASSWORD_ATTRS = [
+  'hashedPassword',
+  'password',
+  'salt',
+];
+
 export const UserSchema = new mongoose.Schema({
   // ======================================================
   // AUTH
   // ======================================================
   username: {
     type: String,
-    unique: 'Username already exists',
+    // у нас уникальность должна быть в рамках projectId, поэтому берем на себя проверку уникальности
+    // unique: 'Username already exists',
     required: 'Please fill in a username',
     trim: true,
   },
@@ -48,7 +71,9 @@ export const UserSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    unique: true,
+    required: true,
+    // у нас уникальность должна быть в рамках projectId, поэтому берем на себя проверку уникальности
+    // unique: true,
     lowercase: true,
     trim: true,
     // match: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
@@ -69,16 +94,6 @@ export const UserSchema = new mongoose.Schema({
   },
 
   // ======================================================
-  // PROVIDER INFO
-  // ======================================================
-  provider: {
-    type: String,
-    required: 'Provider is required',
-  },
-  providerData: {},
-  additionalProvidersData: {},
-
-  // ======================================================
   // MANAGER RIGHTS
   // ======================================================
   roles: {
@@ -93,6 +108,20 @@ export const UserSchema = new mongoose.Schema({
       type: String,
     }],
     default: [],
+  },
+
+  // ======================================================
+  // PROVIDER INFO
+  // ======================================================
+  provider: {
+    type: String,
+    required: 'Provider is required',
+  },
+  providerData: {},
+  additionalProvidersData: {},
+  projectId: {
+    type: String,
+    required: true,
   },
 
   // ======================================================
@@ -143,11 +172,5 @@ UserSchema.methods.checkPassword = function (password) {
 };
 
 export const User = mongoose.model('User', UserSchema);
-
-export const PASSWORD_ATTRS = [
-  'hashedPassword',
-  'password',
-  'salt',
-];
 
 export default User;

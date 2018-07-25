@@ -1,4 +1,4 @@
-import updateRouter from '../helpers/express/create-route';
+import updateRouter from '../../helpers/express/create-route';
 
 /**
  * @see - \src\routes\api-docs\swagger.yaml

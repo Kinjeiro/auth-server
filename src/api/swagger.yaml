@@ -26,10 +26,42 @@ components:
       properties:
         username:
           type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        middleName:
+          type: string
+        displayName:
+          type: string
         email:
+          type: string
+        phone:
+          type: string
+        profileImageURI:
           type: string
       required:
          - username
+         - email
+
+  parameters:
+    accessToken:
+      in: header
+      name: authorization
+      schema:
+        type: string
+        required: true
+      description: \"Bearer <OAuth 2.0 token>\" - access_token
+
+    projectId:
+      in: header
+      name: project_id
+      schema:
+        type: string
+        required: false
+      description: >
+        Индификатор проекта, чтобы выделить юзеров для разных проектов (один авторизационный сервер на несколько проектов)
+        Если не задан автоматически возьмется из client_id или из scope (первым элементом во время /signin)
 
 paths:
 # ===========================
@@ -51,6 +83,8 @@ paths:
       summary: Регистрация нового пользователя
       tags:
         - auth
+      parameters:
+        - $ref: '#/components/parameters/projectId'
       requestBody:
         required: true
         content:
@@ -140,7 +174,8 @@ paths:
           schema:
             type: string
             required: false
-          description: если крендешиался поступают через basic
+          description: если крендешиался поступают через basic: `Basic <base64-encoded credentials>`
+        - $ref: '#/components/parameters/projectId'
 
       requestBody:
         required: true
@@ -236,12 +271,7 @@ paths:
         - oAuth2Password: [auth]
 
       parameters:
-        - in: header
-          name: authorization
-          schema:
-            type: string
-            required: true
-          description: \"Bearer <OAuth 2.0 token>\" - access_token
+        - $ref: '#/components/parameters/accessToken'
 
       responses:
         '200':
@@ -264,12 +294,7 @@ paths:
         - oAuth2Password: [auth]
 
       parameters:
-        - in: header
-          name: authorization
-          schema:
-            type: string
-            required: true
-          description: \"Bearer <OAuth 2.0 token>\" - access_token
+        - $ref: '#/components/parameters/accessToken'
 
       responses:
         '200':
@@ -287,6 +312,8 @@ paths:
         обратно на авторизационный сервер /api/auth/reset
       tags:
         - auth
+      parameters:
+        - $ref: '#/components/parameters/projectId'
       requestBody:
         required: true
         content:

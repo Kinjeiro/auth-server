@@ -1,6 +1,11 @@
 // import faker from 'faker';
 
 export const CLIENTS = {
+  mockServer: {
+    clientId: 'mockServer',
+    clientSecret: 'mockServermockServer',
+    name: 'Mock Server',
+  },
   dashboard: {
     clientId: 'dashboard',
     clientSecret: 'dashboarddashboard',
@@ -30,8 +35,12 @@ export const USERS = {
     email: 'ivanovI@local.com',
     // todo @ANKU @LOW - profileImageURI
 
+    // есть значение по умолчанию
+    // roles: [],
+    // permissions: [],
+
     provider: 'local',
-    permissions: [],
+    projectId: CLIENTS.mockServer.clientId,
   },
   korolevaU: {
     username: 'korolevaU',
@@ -43,7 +52,6 @@ export const USERS = {
     lastName: 'Koroleva',
     email: 'korolevaU@local.com',
 
-    provider: 'local',
     roles: [
       'user',
       'testRole',
@@ -51,6 +59,9 @@ export const USERS = {
     permissions: [
       'TEST_PERMISSION',
     ],
+
+    provider: 'local',
+    projectId: CLIENTS.mockServer.clientId,
   },
 };
 
