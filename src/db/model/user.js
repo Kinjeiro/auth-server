@@ -14,6 +14,7 @@ export const PUBLIC_EDITABLE_ATTRS = [
   'email',
   'phone',
   'profileImageURI',
+  'contextData',
 ];
 
 export const UNIQUE_ATTRS = [
@@ -26,6 +27,9 @@ export const PASSWORD_ATTRS = [
   'password',
   'salt',
 ];
+
+export const ADMIN_ROLE = 'admin';
+export const USER_ROLE = 'user';
 
 export const UserSchema = new mongoose.Schema({
   // ======================================================
@@ -92,6 +96,11 @@ export const UserSchema = new mongoose.Schema({
   profileImageURI: {
     type: String,
   },
+  contextData: {
+    type: Map,
+    of: String,
+    default: {},
+  },
 
   // ======================================================
   // MANAGER RIGHTS
@@ -100,7 +109,7 @@ export const UserSchema = new mongoose.Schema({
     type: [{
       type: String,
     }],
-    default: ['user'],
+    default: [USER_ROLE],
     required: 'Please provide at least one role',
   },
   permissions: {
@@ -171,6 +180,8 @@ UserSchema.methods.checkPassword = function (password) {
   return this.encryptPassword(password) === this.hashedPassword;
 };
 
-export const User = mongoose.model('User', UserSchema);
+export const USER_MODEL_NAME = 'User';
+
+export const User = mongoose.model(USER_MODEL_NAME, UserSchema);
 
 export default User;

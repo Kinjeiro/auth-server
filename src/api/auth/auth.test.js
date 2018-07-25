@@ -12,7 +12,10 @@ import { createResetPasswordToken } from '../../services/service-auth';
 
 import { GRANT_TYPE_PARAM_VALUES } from '../../auth/authorization-oauth2';
 
-describe('[api] auth', () => {
+describe('[api] auth', function anon() {
+  // more timeout for database
+  this.timeout(20000);
+
   describe('[route] /api/auth/signup', () => {
     const testNewUser = {
       username: 'newTestUser',

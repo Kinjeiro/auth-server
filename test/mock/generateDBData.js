@@ -1,3 +1,4 @@
+import '../../src/db/init-models';
 import { fillDataBase } from '../../src/db/db-utils';
 
 import {

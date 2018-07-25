@@ -43,7 +43,7 @@
     "glob": "~7.1.2",
     "lodash": "~4.17.4",
     "method-override": "~2.3.x",
-    "mongoose": "~4.4.20",
+    "mongoose": "~5.2.5",
     "morgan": "~1.8.2",
     "muri": "~1.2.2",
     "nodemailer": "~4.6.7",

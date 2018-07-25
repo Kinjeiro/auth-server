@@ -20,7 +20,7 @@ const htmlResetPassword = fs.readFileSync(path.resolve(__dirname, './auth-reset-
 const htmlResetPasswordSuccess = fs.readFileSync(path.resolve(__dirname, './auth-reset-password-success.html')).toString();
 
 /**
- * @see - \src\routes\api-docs\swagger.yaml
+ * @see - \src\api\swagger.yaml
  */
 const router = createRoute(
   '/signup',
@@ -78,7 +78,7 @@ const router = createRoute(
 );
 
 /**
- * @see - \src\routes\api-docs\swagger.yaml
+ * @see - \src\api\swagger.yaml
  */
 createRoute(
   '/signin',
@@ -91,7 +91,7 @@ createRoute(
 );
 
 /**
- * @see - \src\routes\api-docs\swagger.yaml
+ * @see - \src\api\swagger.yaml
  */
 createRoute(
   '/user',
@@ -114,7 +114,7 @@ createRoute(
 );
 
 /**
- * @see - \src\routes\api-docs\swagger.yaml
+ * @see - \src\api\swagger.yaml
  */
 createRoute(
   '/signout',
@@ -134,7 +134,7 @@ createRoute(
 
 
 /**
- * @see - \src\routes\api-docs\swagger.yaml
+ * @see - \src\api\swagger.yaml
  */
 createRoute(
   '/forgot',
@@ -179,7 +179,7 @@ createRoute(
 );
 
 /**
- * @see - \src\routes\api-docs\swagger.yaml
+ * @see - \src\api\swagger.yaml
  */
 createRoute(
   '/reset',

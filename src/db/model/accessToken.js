@@ -1,9 +1,13 @@
 import mongoose from 'mongoose';
 
+import { USER_MODEL_NAME } from './user';
+
 // AccessToken
 export const AccessTokenSchema = new mongoose.Schema({
   userId: {
-    type: String,
+    // type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: USER_MODEL_NAME,
     required: true,
   },
 

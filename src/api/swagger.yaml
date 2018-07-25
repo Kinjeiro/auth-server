@@ -40,6 +40,9 @@ components:
           type: string
         profileImageURI:
           type: string
+        contextData:
+          type: object
+          description: Небольшое хранилище разнообразных данных для пользователей на проектах
       required:
          - username
          - email
@@ -67,12 +70,17 @@ paths:
 # ===========================
 # ======== HEALTH ===========
 # ===========================
-  /api/helath:
+  /api/health:
     get:
       summary: Тест доступности сервера без авторизации
       responses:
         '200':
-          description: Ok
+          description: Имя и версия сервера
+          content:
+            'text/html':
+              schema:
+                type: string
+                example: @reagentum/auth-server@1.0.1
 
 
 # ===========================
@@ -432,3 +440,5 @@ paths:
       responses:
         '200':
           description: Пароль обновлен. Письмо об успешности смены пароля отослано
+
+# // todo @ANKU @LOW - описание апи для users

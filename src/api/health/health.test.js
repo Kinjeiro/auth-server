@@ -8,7 +8,7 @@ describe('[api] health', () => {
         .get('/api/health');
 
       expect(status).to.equal(200);
-      expect(text).to.equal('OK');
+      expect(text).to.have.string('@reagentum/auth-server@');
     });
   });
 });

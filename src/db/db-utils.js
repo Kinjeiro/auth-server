@@ -68,12 +68,40 @@ async function clearCollection(Model) {
   // Бывает что коллекции и нет и тогда при дропе падает ошибка: "MongoError: ns not found"
   // await collection.drop();
   // проше всех удалить
+  const result = await Model.remove({});
   const {
-    result: {
-      n: count,
-    },
-  } = await Model.remove({});
+    n: count,
+  } = result;
   logger.info(`Drop "${Model.collection.collectionName}" collection ${count > 0 ? `(remove ${count} docs)` : ''}`);
+}
+
+
+async function connectionWrapper(db, executeFn, options = {}) {
+  const {
+    disconnect = false,
+  } = options;
+
+  let dbFinal = db;
+
+  try {
+    if (!dbFinal || typeof dbFinal === 'string') {
+      dbFinal = await connect(typeof dbFinal === 'string' ? dbFinal : undefined);
+    }
+
+    await executeFn(dbFinal.connection);
+
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  } finally {
+    if (disconnect) {
+      // не нужно включать в общую цепочку promise - так как пользователю можно вернуть результат раньше, нежели закроется коннекшен
+      setTimeout(async () => {
+        await dbFinal.disconnect();
+        logger.info('Disconnected from DB');
+      }, 3000);
+    }
+  }
 }
 
 /*
@@ -90,50 +118,38 @@ export async function fillDataBase(
     disconnect = false,
   } = options;
 
-  let dbFinal = db;
+  logger.debug('fillDataBase');
 
-  if (!dbFinal || typeof dbFinal === 'string') {
-    try {
-      dbFinal = await connect(typeof dbFinal === 'string' ? dbFinal : undefined);
-    } catch (error) {
-      logger.error(error);
-      throw error;
-    }
-  }
+  return connectionWrapper(
+    db,
+    (connection) => {
+      const { models } = connection;
 
-  try {
-    await Promise.all(Object.keys(dbFinal.connection.models).map(async (modelName) => {
-      const Model = dbFinal.connection.models[modelName];
-      const entitiesAttributes = modelToEntitiesMap[modelName];
-      const hasInfo = !!entitiesAttributes;
-      const { collectionName } = Model.collection;
+      return Promise.all(Object.keys(models).map(async (modelName) => {
+        const Model = models[modelName];
+        const entitiesAttributes = modelToEntitiesMap[modelName];
+        const hasInfo = !!entitiesAttributes;
+        const { collectionName } = Model.collection;
 
-      if (hasInfo) {
-        if (dropCollection) {
+        if (hasInfo) {
+          if (dropCollection) {
+            await clearCollection(Model);
+          }
+
+          if (entitiesAttributes.length) {
+            // через Model чтобы была валидация полей
+            // const count = await collection.insertMany(entitiesAttributes);
+            const docs = await Model.insertMany(entitiesAttributes);
+            const docIds = docs.map(({ id }) => id);
+            logger.info(`Insert ${docIds.length} documents into "${collectionName}" collection: \n`, docIds.join(', '));
+          }
+        } else if (dropOther) {
           await clearCollection(Model);
         }
-
-        if (entitiesAttributes.length) {
-          // через Model чтобы была валидация полей
-          // const count = await collection.insertMany(entitiesAttributes);
-          const docs = await Model.insertMany(entitiesAttributes);
-          const docIds = docs.map(({ id }) => id);
-          logger.info(`Insert ${docIds.length} documents into "${collectionName}" collection: \n`, docIds.join(', '));
-        }
-      } else if (dropOther) {
-        await clearCollection(Model);
-      }
-    }));
-  } catch (error) {
-    logger.error(error);
-    throw error;
-  } finally {
-    if (disconnect) {
-      // не нужно включать в общую цепочку promise - так как пользователю можно вернуть результат раньше, нежели закроется коннекшен
-      setTimeout(async () => {
-        await dbFinal.disconnect();
-        logger.info('Disconnected from DB');
-      }, 3000);
-    }
-  }
+      }));
+    },
+    {
+      disconnect,
+    },
+  );
 }

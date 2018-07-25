@@ -4,7 +4,7 @@ import pick from 'lodash/pick';
 import { generateTokenValue } from '../utils/common';
 import config from '../config';
 import logger from '../helpers/logger';
-import ValidationError from '../models/ValidationError';
+import ValidationError from '../models/errors/ValidationError';
 
 import Client from '../db/model/client';
 import AccessToken from '../db/model/accessToken';

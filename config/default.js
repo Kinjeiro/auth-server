@@ -1,12 +1,18 @@
+const path = require('path');
+
 const defaultLogsPath = process.cwd() + '/logs/all.log';
 
 const {
   PORT = 1337,
   NODE_ENV = 'development',
-  MONGO_URI = 'mongodb://localhost:27017/frontCoreAuth',
-  TEST_MONGO_URI = 'mongodb://localhost:27017/frontCoreAuthTest',
+  MONGO_URI = 'mongodb://localhost:27017/auth-server',
+  TEST_MONGO_URI = 'mongodb://localhost:27017/auth-serverTest',
   LOGS_PATH = defaultLogsPath,
 } = process.env;
+
+const packageJson = require(path.join(process.cwd(), 'package.json'));
+const APP_ID = packageJson.name;
+const APP_VERSION = packageJson.version;
 
 const env = NODE_ENV;
 
@@ -15,6 +21,8 @@ module.exports = {
     env,
     isProduction: env === 'production',
     isTest: env === 'test',
+    appId: APP_ID,
+    appVersion: APP_VERSION,
   },
 
   server: {
@@ -104,6 +112,7 @@ module.exports = {
 
           auth: {
             user: 'apikey',
+            // Andrey (kinjeiro@gmail.com) account key
             pass: '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',
           },
         },

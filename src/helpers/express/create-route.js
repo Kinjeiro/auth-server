@@ -1,5 +1,8 @@
 import express from 'express';
 
+import { difference } from '../../utils/common';
+import PermissionError from '../../models/errors/PermissionError';
+
 import { middlewareBearerStrategy } from '../../auth/authenticate-passport';
 
 /**
@@ -18,18 +21,60 @@ export function asyncHandlerWrapper(fn) {
     : fn;
 }
 
+export function createPermissionHandlers(options) {
+  const {
+    permissions = [],
+    roles = [],
+  } = options;
+
+  return (req, res, next) => {
+    const {
+      user,
+    } = req;
+
+    const hasCheck = permissions.length || roles.length;
+
+    if (hasCheck) {
+      if (!user) {
+        throw new Error('User doesn\'t find');
+      }
+
+      const {
+        roles: userRoles,
+        permissions: userPermissions,
+      } = user;
+
+      const diffPermissions = difference(permissions, userPermissions);
+      const diffRoles = difference(roles, userRoles);
+
+      if (diffPermissions.length > 0 || diffRoles.length > 0) {
+        throw new PermissionError(diffPermissions, diffRoles);
+      }
+    }
+
+    next();
+  };
+}
+
 /**
  * @param url
  * @param handler - (req, res) => {} - for req add "user" and "authInfo" properties throw BearerStrategy
- * @param opts
+ * @param options -
+   - auth = true,
+   - method = 'get',
+   - router = express.Router(),
+   - permissions = [],
+   - roles = [],
  * @returns {*}
  */
-function createRoute(url, handler, opts = {}) {
+function createRoute(url, handler, options = {}) {
   const {
     auth = true,
     method = 'get',
     router = express.Router(),
-  } = opts;
+    // permissions = [],
+    // roles = [],
+  } = options;
 
   const handlers = [];
   if (auth) {
@@ -42,10 +87,13 @@ function createRoute(url, handler, opts = {}) {
     handlers.push(handler);
   }
 
-  router[method.toLowerCase()](
-    url,
-    ...handlers.map((handlerItem) => asyncHandlerWrapper(handlerItem)),
-  );
+  if (handlers.length > 0) {
+    router[method.toLowerCase()](
+      url,
+      createPermissionHandlers(options),
+      ...handlers.map((handlerItem) => asyncHandlerWrapper(handlerItem)),
+    );
+  }
 
   return router;
 }

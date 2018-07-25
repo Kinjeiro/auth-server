@@ -1,6 +1,6 @@
 import merge from 'lodash/merge';
 
-import winstonLoggerFactory from '../libs/winston-logger';
+import winstonLoggerFactory from './winston/winston-logger';
 import config from '../config';
 
 /**
