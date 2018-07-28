@@ -8,6 +8,7 @@ const {
   MONGO_URI = 'mongodb://localhost:27017/auth-server',
   TEST_MONGO_URI = 'mongodb://localhost:27017/auth-serverTest',
   LOGS_PATH = defaultLogsPath,
+  DROP_ON_START = false,
 } = process.env;
 
 const packageJson = require(path.join(process.cwd(), 'package.json'));
@@ -79,6 +80,7 @@ module.exports = {
           uri: MONGO_URI,
           testUri: TEST_MONGO_URI,
         },
+        dropOnStart: DROP_ON_START,
       },
 
       mail: {

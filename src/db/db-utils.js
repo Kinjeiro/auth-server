@@ -20,7 +20,10 @@ export function equalConnections(connection, dbUri) {
     && port === (parsed.hosts[0].port || 27017);
 }
 
-export function connect(dbUri) {
+export async function connect(
+  dbUri,
+  dropOnStart = config.server.features.db.dropOnStart,
+) {
   if (typeof dbUri === 'undefined') {
     // eslint-disable-next-line no-param-reassign
     dbUri = config.common.isTest
@@ -54,7 +57,11 @@ export function connect(dbUri) {
     mongoose.disconnect();
   }
 
-  mongoose.connect(dbUri);
+  await mongoose.connect(dbUri, () => {
+    if (dropOnStart) {
+      mongoose.connection.dropDatabase();
+    }
+  });
 
   const newConnection = mongoose.connection;
   newConnection.on('error', (err) => logger.error('Connection error:', err.message));
