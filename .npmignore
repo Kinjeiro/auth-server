@@ -4,6 +4,7 @@
 node_modules/
 logs/
 dist/
+src/
 
 npm-debug.log
 docker/tmp-package.json
