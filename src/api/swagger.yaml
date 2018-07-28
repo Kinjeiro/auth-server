@@ -26,6 +26,9 @@ components:
       properties:
         username:
           type: string
+        password:
+          type: string
+          description: Заполняется только при регистрации
         firstName:
           type: string
         lastName:
@@ -46,6 +49,19 @@ components:
       required:
          - username
          - email
+
+    EmailOptions:
+      description: Схема для настроек письма (https://nodemailer.com/message/)
+      type: object
+      properties:
+        subject:
+          type: string
+        text:
+          type: string
+        html:
+          type: string
+#          // todo @ANKU @LOW - сделать чтобы по урлу загружали файл (cors)
+          description: Поддерживается handlesbar (.hbs) темплейтинг (http://handlebarsjs.com/)
 
   parameters:
     accessToken:
@@ -103,6 +119,9 @@ paths:
                 userData:
                   $ref: '#/components/schemas/User'
                   description: пользовательские данные
+                emailOptions:
+                  $ref: '#/components/schemas/EmailOptions'
+                  description: настройки письма об успешности регистрации (контекст User)
                 client_id:
                   type: string
                   description: для проверки подлинности клиента
@@ -332,17 +351,21 @@ paths:
                 email:
                   type: string
                   description: Email существующего пользователя на которой отошлется письмо с урлом и токеном замены пароля
-                emailSubject:
-                  type: string
-                  description: Тема письма
-                emailHtmlTpl:
-                  type: string
+                emailOptions:
+                  $ref: '#/components/schemas/EmailOptions'
                   description: >
-                    Шаблон письма пользователю (нужно обязательно добавить ```{{URL}}```, куда вставится ссылка с токеном для сброса пароля ```?token=<reset password token>```
+                    https://nodemailer.com/message/
+
+                    Про поле html:
+                    Handlersbar шаблон
+                    В контекстных данных передается пользователь (User)
+
+                    В поле "html" нужно поместить шаблон hbs: обязательно добавить ```{{{URL}}}```, куда вставится ссылка с токеном для сброса пароля ```?token=<reset password token>```
                     ```
                     <pre>
                       <div>
-                        <a href="{{URL}}">
+                        <h3>Дорогой, {{displayName}}</h3>
+                        <a href="{{{URL}}}">
                           Сменить пароль
                         </a>
                       </div>
@@ -352,15 +375,13 @@ paths:
                     ```
                     <pre>
                       <div>
+                        <h3>Дорогой, Иван Иванович</h3>
                         <a href="http://myapp.com/reset?token=857896e0aab5b35456f6432ef2f812a344e2a3bab12d38b152ee3dd968442613">
                           Сменить пароль
                         </a>
                       </div>
                     </pre>
                     ```
-                emailOptions:
-                  description: https://nodemailer.com/message/
-                  type: object
                 resetPasswordPageUrl:
                   type: string,
                   description: >
@@ -380,9 +401,10 @@ paths:
                 - client_password
               example:
                 email: 'test@user.com'
-                emailSubject: 'Сброс пароля'
-                emailHtmlTpl: '<div><a href="{{URL}}">Сменить пароль</a></div>'
-                emailHtmlTpl: { priority: 'high' }
+                emailOptions:
+                  subject: 'Сброс пароля'
+                  html: '<div><a href="{{URL}}">Сменить пароль</a></div>'
+                  priority: 'high'
                 resetPasswordPageUrl: 'http://myapp.com/reset'
                 client_id: 'webServer1'
                 client_password: 'webServer1SecretWord'
@@ -416,13 +438,13 @@ paths:
                   type: string
                   description: Новый пароль
 
-                successEmailSubject:
+                emailSubject:
                   type: string
                   description: Тема письма
-                successEmailHtml:
+                emailHtml:
                   type: string
                   description: Тело письма, что пароль успешно обновлен
-                successEmailOptions:
+                emailOptions:
                   type: object
                   description: https://nodemailer.com/message/
 
@@ -439,6 +461,14 @@ paths:
                 - client_password
       responses:
         '200':
-          description: Пароль обновлен. Письмо об успешности смены пароля отослано
+          description: Пароль обновлен. Письмо об успешности смены пароля отослано. Возвращается username, чтобы можно было залогинится снова
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
 
 # // todo @ANKU @LOW - описание апи для users

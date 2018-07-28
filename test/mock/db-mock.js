@@ -6,20 +6,10 @@ export const CLIENTS = {
     clientSecret: 'mockServermockServer',
     name: 'Mock Server',
   },
-  dashboard: {
-    clientId: 'dashboard',
-    clientSecret: 'dashboarddashboard',
-    name: 'Dashboard API v1',
-  },
-  android: {
-    clientId: 'android',
-    clientSecret: 'androidandroid',
-    name: 'Android App',
-  },
   frontCore: {
-    clientId: 'frontCore',
-    clientSecret: 'frontCorefrontCore',
-    name: 'Front Core App',
+    clientId: '@reagentum/front-core',
+    clientSecret: '@reagentum/front-core@reagentum/front-core',
+    name: 'Front Core app',
   },
 };
 

@@ -1,11 +1,13 @@
 import path from 'path';
-import fs from 'fs';
+import Handlebars from 'handlebars';
 
+import { getHandlebarsTemplate } from '../../utils/node-utils';
 import config from '../../config';
 import createRoute from '../../helpers/express/create-route';
 import logger from '../../helpers/logger';
 import sendMail from '../../helpers/mail-helper';
 import { getProjectId } from '../../helpers/request-data';
+import ValidationError from '../../models/errors/ValidationError';
 
 import { middlewareClientPasswordStrategy } from '../../auth/authenticate-passport';
 import oauth2TokenMiddlewares from '../../auth/authorization-oauth2';
@@ -14,10 +16,24 @@ import {
   signOut,
   createResetPasswordToken,
   resetPassword,
+  findUserByEmail,
 } from '../../services/service-auth';
 
-const htmlResetPassword = fs.readFileSync(path.resolve(__dirname, './auth-reset-password.html')).toString();
-const htmlResetPasswordSuccess = fs.readFileSync(path.resolve(__dirname, './auth-reset-password-success.html')).toString();
+const hbsMailSignup = getHandlebarsTemplate(path.resolve(__dirname, './mail-signup.hbs'));
+const hbsMailResetPassword = getHandlebarsTemplate(path.resolve(__dirname, './mail-reset-password.hbs'));
+const hbsMailResetPasswordSuccess = getHandlebarsTemplate(path.resolve(__dirname, './mail-reset-password-success.hbs'));
+
+function getEmailHtml(emailOptions, defaultHbsTemplate, contextData = {}) {
+  const {
+    html,
+    text,
+  } = emailOptions || {};
+  return text
+    ? null
+    : html
+      ? Handlebars.compile(html)(contextData)
+      : defaultHbsTemplate(contextData);
+}
 
 /**
  * @see - \src\api\swagger.yaml
@@ -33,39 +49,34 @@ const router = createRoute(
         body: {
           client_id,
           userData,
+          emailOptions,
         },
       } = req;
       try {
         const user = await signUp(userData, client_id, getProjectId(req));
+
+        if (!config.common.isTest && emailOptions) {
+          try {
+            // асинхронно пускай выполняется
+            sendMail(
+              user.email,
+              emailOptions.subject || 'Регистрация нового пользователя',
+              getEmailHtml(emailOptions, hbsMailSignup, user),
+              emailOptions,
+            );
+          } catch (error) {
+            // проглатываем ошибку об отправке письма, так как это не особо важно, пароль уже сменен
+            logger.error(error);
+          }
+        }
+
         return res.json(user);
       } catch (error) {
         logger.error(error);
         if (error.errors) {
-          // validation errors;
-          // todo @ANKU @CRIT @MAIN - формат ошибок валидации
-          /*
-           The 412 (Precondition Failed) status code indicates that one or more
-           conditions given in the request header fields evaluated to false when
-           tested on the server. This response code allows the client to place
-           preconditions on the current resource state (its current
-           representations and metadata) and, thus, prevent the request method
-           from being applied if the target resource is in an unexpected state.
-           (http://tools.ietf.org/html/rfc7232#section-4.2)
-
-           The 422 (Unprocessable Entity) status code means the server
-           understands the content type of the request entity (hence a
-           415(Unsupported Media Type) status code is inappropriate), and the
-           syntax of the request entity is correct (thus a 400 (Bad Request)
-           status code is inappropriate) but was unable to process the contained
-           instructions. For example, this error condition may occur if an XML
-           request body contains well-formed (i.e., syntactically correct), but
-           semantically erroneous, XML instructions.
-           (http://tools.ietf.org/html/rfc4918#section-11.2)
-          */
-          return res.status(422).json({
-            status: 422,
-            validationErrors: error.errors,
-          });
+          return res
+            .status(422)
+            .json(new ValidationError(error.errors));
         }
         throw error;
       }
@@ -133,6 +144,7 @@ createRoute(
 );
 
 
+export const PARAM__RESET_PASSWORD_TOKEN = 'resetToken';
 /**
  * @see - \src\api\swagger.yaml
  */
@@ -145,25 +157,34 @@ createRoute(
       const {
         body: {
           email,
-          emailSubject,
-          emailHtmlTpl, // необходимо добавить fullForgotPageUrl
-          emailOptions,
+          emailOptions = {},
 
           resetPasswordPageUrl,
           client_id,
         },
       } = req;
 
-      const token = await createResetPasswordToken(getProjectId(req), email, client_id);
+      const user = await findUserByEmail(getProjectId(req), email);
+      if (user === null) {
+        throw new Error(`User with "${email}" email doesn't found`);
+      }
+
+      const token = await createResetPasswordToken(user, client_id);
       // todo @ANKU @LOW - кейс когда есть еще query параметры и токен нужно энкодить
-      const fullResetPasswordPageUrl = `${resetPasswordPageUrl}?token=${token}`;
+      const fullResetPasswordPageUrl = `${resetPasswordPageUrl}?${PARAM__RESET_PASSWORD_TOKEN}=${token}`;
 
       if (!config.common.isTest) {
         await sendMail(
           email,
-          emailSubject || 'Сброс пароля',
-          emailHtmlTpl
-          || (emailHtmlTpl !== false ? htmlResetPassword.replace(/{{URL}}/, fullResetPasswordPageUrl) : null),
+          emailOptions.subject || 'Сброс пароля',
+          getEmailHtml(
+            emailOptions,
+            hbsMailResetPassword,
+            {
+              ...user,
+              URL: fullResetPasswordPageUrl,
+            },
+          ),
           emailOptions,
         );
       }
@@ -191,25 +212,28 @@ createRoute(
         body: {
           resetPasswordToken,
           newPassword,
-
-          successEmailSubject,
-          successEmailHtml,
-          successEmailOptions,
+          emailOptions = {},
         },
       } = req;
 
-      const email = await resetPassword(resetPasswordToken, newPassword);
+      const user = await resetPassword(resetPasswordToken, newPassword);
+      const { email } = user;
 
       if (!config.common.isTest) {
-        await sendMail(
-          email,
-          successEmailSubject || 'Смена пароля',
-          successEmailHtml
-          || (successEmailHtml !== false ? htmlResetPasswordSuccess : null),
-          successEmailOptions,
-        );
+        try {
+          // асинхронно пускай выполняется
+          sendMail(
+            email,
+            emailOptions.subject || 'Смена пароля',
+            getEmailHtml(emailOptions, hbsMailResetPasswordSuccess, user),
+            emailOptions,
+          );
+        } catch (error) {
+          // проглатываем ошибку об отправке письма, так как это не особо важно, пароль уже сменен
+          logger.error(error);
+        }
       }
-      return res.json();
+      return res.json(user);
     },
   ],
   {

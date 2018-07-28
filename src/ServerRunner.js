@@ -6,9 +6,12 @@ import morgan from 'morgan';
 import debug from 'debug';
 
 import config from './config';
+import { errorToJson } from './utils/common';
 import logger from './helpers/logger';
-import './db/init-models';
-import { connect } from './db/db-utils';
+import initDB from './db/init-models';
+import {
+  connect,
+} from './db/db-utils';
 
 import { expressPlugin as authenticatePlugin } from './auth/authenticate-passport';
 import applyRoutes from './api';
@@ -40,12 +43,12 @@ export default class ServerRunner {
   }
 
   errorHandle(err, req, res, next)  {
-    // todo @ANKU @LOW - подумать над форматом
     res.status(err.status || 500);
-    logger.error('%s %d %s', req.method, res.statusCode, err.message, err.stack);
-    return res.json({
-      error: err.message,
-    });
+    logger.error('[%s %d] %s', req.method, res.statusCode, err.message, err.stack);
+
+    // не сериализует вложенные объекты
+    // return res.json(JSON.stringify(err, Object.getOwnPropertyNames(err)));
+    return res.json(errorToJson(err));
   }
 
   getLastMiddlewarePlugins() {
@@ -69,6 +72,9 @@ export default class ServerRunner {
     ];
   }
 
+  initDataBase() {
+    initDB();
+  }
   connectToDataBase() {
     connect();
   }
@@ -117,6 +123,7 @@ export default class ServerRunner {
         logger.info(`Express server listening on port ${port}`);
       });
 
+      this.initDataBase();
       this.connectToDataBase();
 
       return this.server;

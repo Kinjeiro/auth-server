@@ -17,6 +17,13 @@ import {
   UNIQUE_ATTRS,
 } from '../db/model/user';
 
+
+async function clearTokens(userId) {
+  await AccessToken.remove({ userId });
+  await RefreshToken.remove({ userId });
+  await ResetPasswordToken.remove({ userId });
+}
+
 export function validateApplicationClient(clientId, clientSecret, throwError = false) {
   return new Promise((resolve, reject) => {
     logger.info(`(Authenticate) client "${clientId}".`);
@@ -70,9 +77,9 @@ function findUser(byId, projectId, idOrQueryMap, password = null, returnRecord =
 
       if (!user || (password && !user.checkPassword(password))) {
         if (!user) {
-          logger.error(`-- Can't find user "${name}"`);
+          logger.warn(`-- Can't find user "${name}"`);
         } else {
-          logger.error(`-- User "${name}" has incorrect password`);
+          logger.warn(`-- User "${name}" has incorrect password`);
         }
         return resolve(null);
       }
@@ -122,6 +129,7 @@ export function findUserByEmail(projectId, email, returnRecord = false) {
 export async function signUp(userData, provider, projectId) {
   const userDataFinal = {
     ...pick(userData, PUBLIC_EDITABLE_ATTRS),
+    password: userData.password,
     provider,
     projectId,
   };
@@ -221,22 +229,27 @@ export function signOut(userId) {
 // ======================================================
 // FORGOT
 // ======================================================
-export async function createResetPasswordToken(projectId, email, clientId) {
-  logger.info(`[createResetPasswordToken] for email "${email}" [${projectId}]`);
-  const user = await findUserByEmail(projectId, email);
-  if (user === null) {
-    throw new Error(`User with "${email}" email doesn't found`);
-  }
+export async function createResetPasswordToken(user, clientId) {
+  const {
+    userId,
+    email,
+    projectId,
+    username,
+  } = user;
+  logger.info(`[createResetPasswordToken] for email "${username}"(${email}) [${projectId}]`);
+
+  // нужно очистить все токены доступа, если идет сброс пароля
+  await clearTokens(userId);
 
   const resetPasswordToken = generateTokenValue();
   const token = new ResetPasswordToken({
-    userId: user.userId,
+    userId,
     clientId,
     token: resetPasswordToken,
     created: Date.now(),
   });
   await token.save();
-  logger.info(`-- reset password token has been created for user "${user.username}"`);
+  logger.info(`-- reset password token has been created for user "${username}"`);
   return resetPasswordToken;
 }
 
@@ -249,10 +262,14 @@ export async function resetPassword(resetPasswordToken, newPassword) {
     .findOne({ token: resetPasswordToken })
     .exec();
 
-  logger.info(`-- tokenObj "${tokenObj}"`);
+  logger.debug(`-- tokenObj "${tokenObj}"`);
 
   if (tokenObj === null) {
-    throw new Error(`Reset password token "${resetPasswordToken}" doesn't exist`);
+    logger.error(`Reset password token "${resetPasswordToken}" doesn't exist`);
+    throw new ValidationError(
+      'resetPassword',
+      `Reset password token ("${resetPasswordToken.substring(0, 5)}...") has been expired.`,
+    );
   }
 
   const {
@@ -273,11 +290,9 @@ export async function resetPassword(resetPasswordToken, newPassword) {
   user.password = newPassword;
   await user.save();
 
-  await AccessToken.remove({ userId });
-  await RefreshToken.remove({ userId });
-  await ResetPasswordToken.remove({ userId });
+  await clearTokens(userId);
 
-  logger.info(`-- new password set for user "${user.username}"`);
+  logger.info(`-- new password set for user "${user.username}" [${user.projectId}]`);
 
-  return user.email;
+  return user.getSafeUser();
 }

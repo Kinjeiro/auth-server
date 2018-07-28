@@ -8,7 +8,10 @@ import config from '../../config';
 import logger from '../../helpers/logger';
 
 import { fillDataBase } from '../../db/db-utils';
-import { createResetPasswordToken } from '../../services/service-auth';
+import {
+  createResetPasswordToken,
+  findUserByName,
+} from '../../services/service-auth';
 
 import { GRANT_TYPE_PARAM_VALUES } from '../../auth/authorization-oauth2';
 
@@ -20,6 +23,7 @@ describe('[api] auth', function anon() {
     const testNewUser = {
       username: 'newTestUser',
       email: 'newTestUser@opa.com',
+      password: 'newTestNewTest',
     };
     before(async () => {
       await fillDataBase({
@@ -158,14 +162,15 @@ describe('[api] auth', function anon() {
         expect(true).to.be.false;
       } catch (errorResponse) {
         /*
-         message = "Unauthorized"
-         original = null
-         response = Response
-         stack = "Error: Unauthorized\n    at Test.Request.callback...
-         status = 401
+         name: 'TokenError',
+         message: 'Invalid resource owner credentials',
+         code: 'invalid_grant',
+         status: 403,
+         stack: 'TokenError: Invalid resource owner credentials
          */
         expect(errorResponse.response.status).to.equal(403);
-        expect(errorResponse.response.body.error).to.equal('Invalid resource owner credentials');
+        console.warn('ANKU , errorResponse.response.body', errorResponse.response.body);
+        expect(errorResponse.response.body.message).to.equal('Invalid resource owner credentials');
       }
     });
 
@@ -253,7 +258,7 @@ describe('[api] auth', function anon() {
         expect(true).to.be.false;
       } catch (errorResponse) {
         expect(errorResponse.response.status).to.equal(403);
-        expect(errorResponse.response.body.error).to.equal('Invalid resource owner credentials');
+        expect(errorResponse.response.body.message).to.equal('Invalid resource owner credentials');
       }
     });
   });
@@ -370,7 +375,7 @@ describe('[api] auth', function anon() {
     let resetToken;
     let accessToken;
 
-    before(async () => {
+    beforeEach(async () => {
       await fillDataBase({
         Client: [testClient],
         User: [testUser],
@@ -378,7 +383,8 @@ describe('[api] auth', function anon() {
         dropOther: true,
       });
       accessToken = await getTestToken(testUser, testClient, false);
-      resetToken = await createResetPasswordToken(testClient.clientId, testUser.email, testClient.clientId);
+      const user = await findUserByName(testUser.projectId, testUser.username);
+      resetToken = await createResetPasswordToken(user, testClient.clientId);
       logger.debug('Start test: [route] /api/auth/reset', '\n');
     });
 
@@ -387,6 +393,7 @@ describe('[api] auth', function anon() {
       expect(accessToken).to.be.exist();
 
       // меняем пароль на новый с помощью resetToken
+      logger.log('Change to new password');
       const {
         status,
       } = await chai.request(server)
@@ -394,9 +401,7 @@ describe('[api] auth', function anon() {
         .send({
           resetPasswordToken: resetToken,
           newPassword: '654321',
-          // successEmailSubject
-          // successEmailHtmlTpl
-          // successEmailOptions
+          // emailOptions
           client_id: testClient.clientId,
           client_secret: testClient.clientSecret,
         });
@@ -405,14 +410,16 @@ describe('[api] auth', function anon() {
 
       try {
         // логин по старым данным должен быть неудачным
+        logger.log('Try to signin with old credentials');
         accessToken = await getTestToken(testUser, testClient, false);
         expect(true).to.be.false;
       } catch (errorResponse) {
         expect(errorResponse.status).to.equal(403);
-        expect(errorResponse.response.body.error).to.equal('Invalid resource owner credentials');
+        expect(errorResponse.response.body.message).to.equal('Invalid resource owner credentials');
       }
 
       // логин по новым данным должен быть ок
+      logger.log('Try to signin with new credentials');
       accessToken = await getTestToken(
         {
           ...testUser,

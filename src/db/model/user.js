@@ -2,6 +2,7 @@
 import crypto from 'crypto';
 import validator from 'validator';
 import mongoose from 'mongoose';
+import omit from 'lodash/omit';
 
 import { generateTokenValue } from '../../utils/common';
 
@@ -178,6 +179,9 @@ UserSchema.methods.encryptPassword = function (password) {
 
 UserSchema.methods.checkPassword = function (password) {
   return this.encryptPassword(password) === this.hashedPassword;
+};
+UserSchema.methods.getSafeUser = function () {
+  return omit(this.toJSON({ virtuals: false }), PASSWORD_ATTRS);
 };
 
 export const USER_MODEL_NAME = 'User';
