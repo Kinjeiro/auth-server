@@ -75,8 +75,8 @@ export default class ServerRunner {
   initDataBase() {
     initDB();
   }
-  connectToDataBase() {
-    connect();
+  async connectToDataBase() {
+    await connect();
   }
 
   initServer() {
@@ -104,7 +104,7 @@ export default class ServerRunner {
     this.init = true;
   }
 
-  runServer() {
+  async runServer() {
     try {
       const { init } = this;
       if (!init) {
@@ -124,7 +124,7 @@ export default class ServerRunner {
       });
 
       this.initDataBase();
-      this.connectToDataBase();
+      await this.connectToDataBase();
 
       return this.server;
     } catch (error) {

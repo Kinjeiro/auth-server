@@ -1,7 +1,13 @@
-import ServerRunner from './ServerRunner';
+async function start() {
+  try {
+    // await initAll();
+    const ServerRunner = require('./ServerRunner').default;
+    const runner = new ServerRunner();
+    await runner.runServer();
+    return runner.server;
+  } catch (error) {
+    console.error(error);
+  }
+}
 
-const runner = new ServerRunner();
-runner.runServer();
-
-export default runner.server;
-
+export default start();

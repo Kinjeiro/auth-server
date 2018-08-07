@@ -1,7 +1,30 @@
-Авторизационный сервер OAuth 2
+# Auth-server - Авторизационный сервер OAuth 2
 
-Все начинаются с префикса - api
+## Установка и настройка
+* [Настройка Mongo DB](./db/README.md)
 
+## Запуск сервера
+К примеру, проект ```myProject``` (name из проектного package.json)
+
+1. Установим нужные зависимости
+```
+npm i && npm i cross-env -g
+```
+2. Создадим клиента и моки под него
+```
+cross-env PROJECT_ID=myProject USE_MOCK=1 NODE_ENV=development npm run mongo:mock 
+```
+3. Запустим билд и pm2 запустит daemon процесс. Глянем логи для него
+```
+npm run update:daemon:development && npm run logs
+```
+4. Открываем браузер и пользуемся апи, описанным в swagger
+```
+http://dev.reagentum.ru:1337/api-docs
+```
+
+## API
+Все начинаются с префикса - api (к примеру ```http://dev.reagentum.ru:1337/api/health```)
 
 Health
 - [GET] /api/health

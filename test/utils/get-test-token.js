@@ -7,7 +7,7 @@ import { fillDataBase } from '../../src/db/db-utils';
 
 import { GRANT_TYPE_PARAM_VALUES } from '../../src/auth/authorization-oauth2';
 
-export const testClient = CLIENTS.mockServer;
+export const testClient = CLIENTS['mockServer'];
 export const testUser = USERS.ivanovI;
 
 export async function getTestToken(user = testUser, client = testClient, dropBase = true) {
@@ -16,6 +16,7 @@ export async function getTestToken(user = testUser, client = testClient, dropBas
       Client: [client],
       User: [user],
     }, {
+      dropCollection: true,
       dropOther: true,
     });
   }

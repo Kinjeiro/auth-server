@@ -37,7 +37,7 @@ export function validateApplicationClient(clientId, clientSecret, throwError = f
         if (!client) {
           logger.error(`-- Client "${clientId}" doesn't registered.`);
         } else {
-          logger.error(`-- Client "${clientId}" hasn't wrong secret.`);
+          logger.error(`-- Client "${clientId}" hasn wrong secret.`);
         }
         if (throwError) {
           return reject(new Error(`Client "${clientId}" incorrect`));

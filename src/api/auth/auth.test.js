@@ -30,6 +30,7 @@ describe('[api] auth', function anon() {
         Client: [testClient],
         User: [testUser],
       }, {
+        dropCollection: true,
         dropOther: true,
       });
     });
@@ -119,6 +120,7 @@ describe('[api] auth', function anon() {
         Client: [testClient],
         User: [testUser],
       }, {
+        dropCollection: true,
         dropOther: true,
       });
     });
@@ -346,6 +348,7 @@ describe('[api] auth', function anon() {
         Client: [testClient],
         User: [testUser],
       }, {
+        dropCollection: true,
         dropOther: true,
       });
     });
@@ -380,6 +383,7 @@ describe('[api] auth', function anon() {
         Client: [testClient],
         User: [testUser],
       }, {
+        dropCollection: true,
         dropOther: true,
       });
       accessToken = await getTestToken(testUser, testClient, false);

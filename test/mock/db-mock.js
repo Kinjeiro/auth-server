@@ -1,16 +1,25 @@
 // import faker from 'faker';
 
+const {
+  PROJECT_ID,
+  USE_MOCK,
+  NODE_ENV,
+} = process.env;
+
+const projectId = PROJECT_ID || 'mockServer';
+const useMock = !!USE_MOCK || NODE_ENV === 'test';
+
 export const CLIENTS = {
-  mockServer: {
-    clientId: 'mockServer',
-    clientSecret: 'mockServermockServer',
-    name: 'Mock Server',
+  [projectId]: {
+    clientId: projectId,
+    clientSecret: `${projectId}${projectId}`,
+    name: projectId,
   },
-  frontCore: {
-    clientId: '@reagentum/front-core',
-    clientSecret: '@reagentum/front-core@reagentum/front-core',
-    name: 'Front Core app',
-  },
+  // frontCore: {
+  //   clientId: '@reagentum/front-core',
+  //   clientSecret: '@reagentum/front-core@reagentum/front-core',
+  //   name: 'Front Core app',
+  // },
 };
 
 export const USERS = {
@@ -30,7 +39,7 @@ export const USERS = {
     // permissions: [],
 
     provider: 'local',
-    projectId: CLIENTS.mockServer.clientId,
+    projectId: CLIENTS[projectId].clientId,
   },
   korolevaU: {
     username: 'korolevaU',
@@ -51,11 +60,11 @@ export const USERS = {
     ],
 
     provider: 'local',
-    projectId: CLIENTS.mockServer.clientId,
+    projectId: CLIENTS[projectId].clientId,
   },
 };
 
 export default {
   CLIENTS,
-  USERS,
+  USERS: useMock ? USERS : {},
 };

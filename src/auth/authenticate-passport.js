@@ -22,7 +22,11 @@ const STRATEGY__CLIENT_PASSWORD = 'oauth2-client-password';
 passport.use(new ClientPasswordStrategy(
   async (clientId, clientSecret, done) => {
     try {
+      logger.debug(`(Client\\Password strategy) Check clientId ${clientId}`);
       const client = await validateApplicationClient(clientId, clientSecret);
+      if (client) {
+        logger.debug(`-- found client ${client.clientId}`);
+      }
       // todo @ANKU @LOW @BUG_OUT @passport-oauth2-client-password - при ошибке не учитывается info (3-ий параметр)
       // return done(null, false, `-- Client "${client}" doesn't registered.`);
       done(null, client);
@@ -41,6 +45,9 @@ passport.use(new BasicStrategy(
       const projectId = getProjectId(req);
       logger.info(`(Authenticate Basic) Check user ${username} [${projectId}]`);
       const user = await findUserByName(projectId, username, password);
+      if (user) {
+        logger.info(`-- found user ${user.username}`);
+      }
       done(null, user);
     } catch (error) {
       done(error);
@@ -119,8 +126,8 @@ export const middlewareClientPasswordStrategy =
 export const middlewareBasicAndClientPasswordStrategy =
   passport.authenticate(
     [
-      STRATEGY__BASIC_USER_PASSWORD,
       STRATEGY__CLIENT_PASSWORD,
+      STRATEGY__BASIC_USER_PASSWORD,
     ],
     {
       session: false,

@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import mongoose from 'mongoose';
 import muri from 'muri';
 
@@ -20,12 +21,28 @@ export function equalConnections(connection, dbUri) {
     && port === (parsed.hosts[0].port || 27017);
 }
 
+/**
+ *
+ * @param dbUri - uri либо первым параметром идет мапа connectionOptions а uri берется из настроек
+ * @param dropOnStart
+ * @param user - либо через dbUri: 'mongodb://username:password@host:port/database?options...'
+ * @param password
+ * @param connectionOptions - http://mongodb.github.io/node-mongodb-native/3.1/api/MongoClient.html#.connect
+ * @return {Promise.<*|Mongoose>}
+ */
 export async function connect(
   dbUri,
   dropOnStart = config.server.features.db.dropOnStart,
+  user = config.server.features.db.mongoose.auth.user,
+  password = config.server.features.db.mongoose.auth.password,
+  connectionOptions = {},
 ) {
-  if (typeof dbUri === 'undefined') {
-    // eslint-disable-next-line no-param-reassign
+  if (typeof dbUri === 'object') {
+    connectionOptions = dbUri;
+    dbUri = null;
+  }
+
+  if (!dbUri) {
     dbUri = config.common.isTest
       ? config.server.features.db.mongoose.testUri
       : config.server.features.db.mongoose.uri;
@@ -57,11 +74,34 @@ export async function connect(
     mongoose.disconnect();
   }
 
-  await mongoose.connect(dbUri, () => {
-    if (dropOnStart) {
-      mongoose.connection.dropDatabase();
-    }
-  });
+  const hasCredentials = password !== null;
+  let credentialsOptions = {};
+  if (hasCredentials) {
+    logger.info('Mongo authenticated: ', user);
+    credentialsOptions = {
+      user,
+      pass: password,
+      authSource: 'admin',
+      authMechanism: 'SCRAM-SHA-1',
+    };
+  }
+
+  const connectionOptionsFinal = {
+    useNewUrlParser: true,
+    ...credentialsOptions,
+    ...connectionOptions,
+  };
+
+  logger.debug('Mongo connect to', dbUri, connectionOptionsFinal);
+  await mongoose.connect(
+    dbUri,
+    connectionOptionsFinal,
+    () => {
+      if (dropOnStart) {
+        mongoose.connection.dropDatabase();
+      }
+    },
+  );
 
   const newConnection = mongoose.connection;
   newConnection.on('error', (err) => logger.error('Connection error:', err.message));
@@ -99,7 +139,6 @@ async function connectionWrapper(db, executeFn, options = {}) {
 
   } catch (error) {
     logger.error(error);
-    throw error;
   } finally {
     if (disconnect) {
       // не нужно включать в общую цепочку promise - так как пользователю можно вернуть результат раньше, нежели закроется коннекшен
@@ -120,8 +159,8 @@ export async function fillDataBase(
 ) {
   const {
     db,
-    dropCollection = true,
-    dropOther,
+    dropCollection = false,
+    dropOther = false,
     disconnect = false,
   } = options;
 

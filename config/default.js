@@ -2,18 +2,20 @@ const path = require('path');
 
 const defaultLogsPath = process.cwd() + '/logs/all.log';
 
-const {
-  PORT = 1337,
-  NODE_ENV = 'development',
-  MONGO_URI = 'mongodb://localhost:27017/auth-server',
-  TEST_MONGO_URI = 'mongodb://localhost:27017/auth-serverTest',
-  LOGS_PATH = defaultLogsPath,
-  DROP_ON_START = false,
-} = process.env;
-
 const packageJson = require(path.join(process.cwd(), 'package.json'));
 const APP_ID = packageJson.name;
 const APP_VERSION = packageJson.version;
+
+const {
+  PORT = 1337,
+  NODE_ENV = 'development',
+  MONGO_URI,
+  TEST_MONGO_URI,
+  MONGO_USER,
+  MONGO_PASSWORD,
+  LOGS_PATH = defaultLogsPath,
+  DROP_ON_START = false,
+} = process.env;
 
 const env = NODE_ENV;
 
@@ -77,8 +79,12 @@ module.exports = {
 
       db: {
         mongoose: {
-          uri: MONGO_URI,
-          testUri: TEST_MONGO_URI,
+          uri: MONGO_URI || 'mongodb://localhost:27017/auth-server',
+          testUri: TEST_MONGO_URI || 'mongodb://localhost:27017/auth-serverTest',
+          auth: {
+            user: MONGO_USER || 'authServerUser',
+            password: MONGO_PASSWORD || 'authAuth',
+          },
         },
         dropOnStart: DROP_ON_START,
       },
