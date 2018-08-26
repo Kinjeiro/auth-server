@@ -1,6 +1,6 @@
 {
   "name": "@reagentum/auth-server",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Front Core auth-server (OAuth2)",
   "publishConfig": {
     "registry": "http://npm.reagentum.ru/"
@@ -10,13 +10,11 @@
     "start": "npm run start:localhost",
     "start:localhost": "cross-env NODE_ENV=localhost nodemon --exec babel-node -- ./src/server.js",
     "start:localhost:mock": "npm run mongo:mock && npm run start:localhost",
-
     "----- BUILD -----": "----------",
     "build:inner": "babel src --out-dir dist --copy-files",
     "build": "cross-env NODE_ENV=production npm run build:inner",
     "build:development": "cross-env NODE_ENV=development npm run build:inner",
     "test:build": "npm run build && npm run start:build",
-
     "----- START DAEMON -----": "----------",
     "start:daemon:inner": "pm2 start ./dist/server.js --name auth-server",
     "start:daemon": "cross-env NODE_ENV=production npm run start:daemon:inner",
@@ -25,12 +23,10 @@
     "update:daemon": "npm run stop:daemon && npm i && npm run build && npm run start:daemon",
     "update:daemon:development": "npm run stop:daemon && npm i && npm run build:development && npm run start:daemon:development",
     "logs": "pm2 logs auth-server --lines 300",
-
     "----- START -----": "----------",
     "start:build": "node ./dist/server.js",
     "start:production": "cross-env NODE_ENV=production npm run start-build",
     "start:development": "cross-env NODE_ENV=development npm run start-build",
-
     "----- MONGO DB -----": "----------",
     "--example mongo:mock": "cross-env PROJECT_ID=myProject USE_MOCK=1 EMAIL_AS_LOGIN=1 NODE_ENV=development npm run mongo:mock",
     "mongo:mock": "node --require babel-register ./test/mock/generateDBData.js",
@@ -40,11 +36,9 @@
     "mongo:run:windows": "net start MongoDB || echo 'Уже запущена' && npm run mongo:mock",
     "mongo:stop:windows": "net stop MongoDB || echo 'Уже остановлено' ",
     "mongo:init": "mongo.exe localhost:27017/auth-server \"<absolute_path_to_project>\\db\\fill-mock-user.js\"",
-
     "----- TEST -----": "----------",
     "test": "cross-env NODE_ENV=test mocha --require babel-register ./test/test-runner.js",
     "test:watch": "npm run test -- --watch",
-
     "----- GIT -----": "----------",
     "compile": "rimraf lib/* -f && babel src --out-dir lib --copy-files",
     "publish-patch": "npm run release-patch && npm publish",
