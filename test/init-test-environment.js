@@ -31,4 +31,5 @@ global.sinon = sinon;
  @NOTE: добавим в глобальные переменные инстанс, чтобы не получать его каждый раз + в концу можно сделать server.close.
  Хотя мока сама это уже делает, но пусть будет.
  */
+console.log('INIT test server', !!server);
 global.server = server;

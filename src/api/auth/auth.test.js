@@ -15,6 +15,10 @@ import {
 
 import { GRANT_TYPE_PARAM_VALUES } from '../../auth/authorization-oauth2';
 
+if (!server) {
+  throw new Error('Не инициализировано окружение тестов (файл \\test\\init-test-environment.js)');
+}
+
 describe('[api] auth', function anon() {
   // more timeout for database
   this.timeout(20000);

@@ -1,13 +1,18 @@
+const ServerRunner = require('./ServerRunner').default;
+
+const runner = new ServerRunner();
+const server = runner.createServer();
+
 async function start() {
   try {
     // await initAll();
-    const ServerRunner = require('./ServerRunner').default;
-    const runner = new ServerRunner();
-    await runner.runServer();
-    return runner.server;
+    return await runner.runServer(server);
   } catch (error) {
     console.error(error);
+    return null;
   }
 }
 
-export default start();
+export const startPromise = start();
+
+export default server;

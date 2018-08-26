@@ -104,29 +104,33 @@ export default class ServerRunner {
     this.init = true;
   }
 
-  async runServer() {
+  createServer() {
+    const { init } = this;
+    if (!init) {
+      this.initServer();
+    }
+
+    const { app } = this;
+
+    // eslint-disable-next-line prefer-destructuring
+    const port = config.server.serverConfig.port;
+
+    app.set('port', port);
+
+    this.server = app.listen(port, () => {
+      debugRestApi(`Express server listening on port ${port}`);
+      logger.info(`Express server listening on port ${port}`);
+    });
+
+    return this.server;
+  }
+
+  async runServer(server = this.createServer()) {
     try {
-      const { init } = this;
-      if (!init) {
-        this.initServer();
-      }
-
-      const { app } = this;
-
-      // eslint-disable-next-line prefer-destructuring
-      const port = config.server.serverConfig.port;
-
-      app.set('port', port);
-
-      this.server = app.listen(port, () => {
-        debugRestApi(`Express server listening on port ${port}`);
-        logger.info(`Express server listening on port ${port}`);
-      });
-
       this.initDataBase();
       await this.connectToDataBase();
 
-      return this.server;
+      return server;
     } catch (error) {
       logger.error(error);
 
