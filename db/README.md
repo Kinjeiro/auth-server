@@ -43,12 +43,13 @@ net stop MongoDB
 Добавляем для конкретного проекта клиента и для него моковских пользователей
 
 ```
-npm i && npm i cross-env -g && cross-env PROJECT_ID=<YOUR_PROJECT_ID> USE_MOCK=1 npm run mongo:mock
+npm i && npm i cross-env -g && cross-env PROJECT_ID=<YOUR_PROJECT_ID> USE_MOCK=1 EMAIL_AS_LOGIN=1 npm run mongo:mock
 ```
 ```PROJECT_ID``` - projectId или clientId проекта. В корных проектах ```clientId``` равен ```name``` из ```package.json```
 (конфиг ```server.features.auth.applicationClientInfo.client_id```)
 
 ```USE_MOCK``` - создать моковских пользователей: ```ivanovI\123456``` и ```korolevaU\123456```
+```EMAIL_AS_LOGIN``` - в качестве username проставляется почта
 
 
 Способ через файл неочень хорош, так как не учитывает модельных дефолтных настроек (к примеру, salt, hashed, created, updated приходится сначала руками генерить)
