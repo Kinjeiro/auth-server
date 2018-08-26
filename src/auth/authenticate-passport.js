@@ -1,8 +1,10 @@
 /* eslint-disable function-paren-newline */
 import passport from 'passport';
 import { BasicStrategy } from 'passport-http';
-import ClientPasswordStrategy from 'passport-oauth2-client-password';
+// import ClientPasswordStrategy from 'passport-oauth2-client-password';
 import BearerStrategy from 'passport-http-bearer';
+
+import ClientPasswordStrategy from './passport-oauth2-client-password-strategy';
 
 import config from '../config';
 import logger from '../helpers/logger';

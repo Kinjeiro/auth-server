@@ -32,7 +32,7 @@
     "start:development": "cross-env NODE_ENV=development npm run start-build",
 
     "----- MONGO DB -----": "----------",
-    "--example mongo:mock": "cross-env PROJECT_ID=myProject USE_MOCK=1 NODE_ENV=development npm run mongo:mock",
+    "--example mongo:mock": "cross-env PROJECT_ID=myProject USE_MOCK=1 EMAIL_AS_LOGIN=1 NODE_ENV=development npm run mongo:mock",
     "mongo:mock": "node --require babel-register ./test/mock/generateDBData.js",
     "mongo:run:unix": "mongod --fork --port 27017 --auth && npm run mongo:mock",
     "mongo:install:windows": "mongod --install --serviceName \"MongoDB\" --dbpath \"B:\\mongodb\\db\" --logpath \"B:\\mongodb\\logs\\mongo.log\"",
@@ -56,6 +56,9 @@
     "version": "npm run compile && git add -A",
     "postversion": "git push --follow-tags"
   },
+  "deleteDependencies": {
+    "passport-oauth2-client-password": "~0.1.x"
+  },
   "dependencies": {
     "babel-plugin-transform-class-properties": "~6.24.1",
     "babel-plugin-transform-export-extensions": "~6.22.0",
@@ -78,9 +81,9 @@
     "nodemailer": "~4.6.7",
     "oauth2orize": "~1.0.x",
     "passport": "~0.2.x",
+    "passport-strategy": "1.x.x",
     "passport-http": "~0.2.x",
     "passport-http-bearer": "~1.0.x",
-    "passport-oauth2-client-password": "~0.1.x",
     "pm2": "~3.0.3",
     "rimraf": "~2.6.2",
     "swagger-ui-express": "~3.0.10",
