@@ -5,6 +5,7 @@ node_modules/
 logs/
 dist/
 src/
+config/local-*.js
 
 npm-debug.log
 docker/tmp-package.json
