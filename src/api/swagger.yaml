@@ -2,8 +2,11 @@ openapi: 3.0.0
 # https://swagger.io/docs/specification/basic-structure/
 
 info:
-  version: 1.0.0
+  version: 1.1.0
   title: NodeJs Auth server
+  description:
+    **!!!WARNING!!!** **При авторизации** через swagger-ui используйте только "Query parameters". "Request body" - в swagger-ui не работает, там [у них открытая бага (не кладутся client_id в боди)](https://github.com/swagger-api/swagger-ui/pull/4213)
+
   license:
     name: Reagentum Front Core
 
@@ -43,6 +46,7 @@ components:
           type: string
         profileImageURI:
           type: string
+          description: data:image base64
         contextData:
           type: object
           description: Небольшое хранилище разнообразных данных для пользователей на проектах
@@ -125,13 +129,13 @@ paths:
                 client_id:
                   type: string
                   description: для проверки подлинности клиента
-                client_password:
+                client_secret:
                   type: string
                   description: для проверки подлинности клиента
               required:
                 - userData
                 - client_id
-                - client_password
+                - client_secret
 
       responses:
         '200':
@@ -216,7 +220,7 @@ paths:
                 client_id:
                   type: string
                   description: для проверки подлинности клиента
-                client_password:
+                client_secret:
                   type: string
                   description: для проверки подлинности клиента
                 username:
@@ -231,7 +235,7 @@ paths:
               required:
                 - grant_type
                 - client_id
-                - client_password
+                - client_secret
               example:
                 grant_type: 'password'
                 client_id: 'myApplication'
@@ -391,14 +395,14 @@ paths:
                 client_id:
                   type: string
                   description: для проверки подлинности клиента
-                client_password:
+                client_secret:
                   type: string
                   description: для проверки подлинности клиента
               required:
                 - email
                 - resetPasswordPageUrl
                 - client_id
-                - client_password
+                - client_secret
               example:
                 email: 'test@user.com'
                 emailOptions:
@@ -407,7 +411,7 @@ paths:
                   priority: 'high'
                 resetPasswordPageUrl: 'http://myapp.com/reset'
                 client_id: 'webServer1'
-                client_password: 'webServer1SecretWord'
+                client_secret: 'webServer1SecretWord'
 
       responses:
         '200':
@@ -451,14 +455,14 @@ paths:
                 client_id:
                   type: string
                   description: для проверки подлинности клиента
-                client_password:
+                client_secret:
                   type: string
                   description: для проверки подлинности клиента
               required:
                 - resetPasswordToken
                 - newPassword
                 - client_id
-                - client_password
+                - client_secret
       responses:
         '200':
           description: Пароль обновлен. Письмо об успешности смены пароля отослано. Возвращается username, чтобы можно было залогинится снова
@@ -471,4 +475,221 @@ paths:
                 email:
                   type: string
 
-# // todo @ANKU @LOW - описание апи для users
+
+# ===========================
+# ====== user/avatar ========
+# ===========================
+  /api/users/avatar/{username}:
+    get:
+      summary: Получения аватара пользователя
+      tags:
+        - users
+      security:
+        - oAuth2Password: [auth]
+
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+          description: username
+
+      responses:
+        '200':
+          description: base64 картинка
+          content:
+            text/html:
+              schema:
+                type: string
+
+
+# ===========================
+# ====== user/public ========
+# ===========================
+  /api/users/public/{username}:
+    get:
+      summary: Получения публичных полей пользователя
+      description: Получения публичных полей пользователя любому зарегистрированным пользователем
+      tags:
+        - users
+      security:
+        - oAuth2Password: [auth]
+
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+          description: username
+
+      responses:
+        '200':
+          description: Обычно это 'username', 'displayName', 'profileImageURI'
+          content:
+            application/json:
+              schema:
+                type: object
+
+# ===========================
+# ====== user/protected ========
+# ===========================
+  /api/users/protected/{username}:
+    get:
+      summary: Получения защищенных полей пользователя
+      description: Получения публичных полей пользователя специальными ролями ('admin' или 'protector')
+      tags:
+        - users
+      security:
+        - oAuth2Password: [auth]
+
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+          description: username
+
+      responses:
+        '200':
+          description: Обычно это 'username', 'displayName', 'profileImageURI', 'firstName', 'lastName', 'middleName', 'email', 'phone',
+          content:
+            application/json:
+              schema:
+                type: object
+
+# ===========================
+# ====== user PUT ========
+# ===========================
+  /api/users:
+    put:
+      summary: Обновление данных пользователем
+      description: Обновление данных пользователем
+      tags:
+        - users
+      security:
+        - oAuth2Password: [auth]
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                middleName:
+                  type: string
+                displayName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                profileImageURI:
+                  type: string
+                contextData:
+                  type: object
+      responses:
+        '200':
+          description: Все прошло успешно
+
+# ===========================
+# ====== user delete ========
+# ===========================
+    delete:
+      summary: удаление собственного пользователя
+      description: удаление собственного пользователя
+      tags:
+        - users
+      security:
+        - oAuth2Password: [auth]
+      responses:
+        '200':
+          description: Все прошло успешно
+
+# ===========================
+# ====== user PUT by admin ========
+# ===========================
+  /api/users/{username}:
+    put:
+      summary: Обновление данных пользователя админом
+      description: Обновление данных пользователя админом
+      tags:
+        - users
+      security:
+        - oAuth2Password: [auth]
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+          description: username
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                middleName:
+                  type: string
+                displayName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                profileImageURI:
+                  type: string
+                contextData:
+                  type: object
+      responses:
+        '200':
+          description: Все прошло успешно
+
+# ===========================
+# ====== user delete by admin ========
+# ===========================
+    delete:
+      summary: удаление пользователя админом
+      description: удаление пользователя админом
+      tags:
+        - users
+      security:
+        - oAuth2Password: [auth]
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+          description: username
+      responses:
+        '200':
+          description: Все прошло успешно
+
+
+# ===========================
+# ====== delete all by admin ========
+# ===========================
+  /api/users/all:
+    delete:
+      summary: удаление всех пользователей админом
+      tags:
+        - users
+      security:
+        - oAuth2Password: [auth]
+      responses:
+        '200':
+          description: Все прошло успешно

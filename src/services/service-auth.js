@@ -129,6 +129,7 @@ export function findUserByEmail(projectId, email, returnRecord = false) {
 export async function signUp(userData, provider, projectId) {
   const userDataFinal = {
     ...pick(userData, PUBLIC_EDITABLE_ATTRS),
+    username: userData.username,
     password: userData.password,
     provider,
     projectId,

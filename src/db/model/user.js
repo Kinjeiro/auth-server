@@ -6,8 +6,21 @@ import omit from 'lodash/omit';
 
 import { generateTokenValue } from '../../utils/common';
 
-export const PUBLIC_EDITABLE_ATTRS = [
+export const PUBLIC_TO_ALL_ATTRS = [
   'username',
+  'displayName',
+  'profileImageURI',
+];
+export const PROTECTED_ATTRS = [
+  ...PUBLIC_TO_ALL_ATTRS,
+  'firstName',
+  'lastName',
+  'middleName',
+  'email',
+  'phone',
+];
+
+export const PUBLIC_EDITABLE_ATTRS = [
   'firstName',
   'lastName',
   'middleName',
@@ -31,6 +44,7 @@ export const PASSWORD_ATTRS = [
 
 export const ADMIN_ROLE = 'admin';
 export const USER_ROLE = 'user';
+export const GET_PROTECTED_INFO_ROLE = 'protector';
 
 export const UserSchema = new mongoose.Schema({
   // ======================================================
@@ -90,7 +104,9 @@ export const UserSchema = new mongoose.Schema({
   phone: {
     type: String,
     validate: [
-      (phone) => validator.isMobilePhone(phone),
+      // без локали падает: phone: Invalid locale 'undefined'
+      // todo @ANKU @LOW - подумать над универсальным не зависящим от локали
+      (phone) => (!phone ? true : validator.isMobilePhone(phone, 'ru-RU', { strictMode: true })),
       'Please fill a valid phone',
     ],
   },
@@ -118,6 +134,9 @@ export const UserSchema = new mongoose.Schema({
       type: String,
     }],
     default: [],
+  },
+  isSystem: {
+    type: Boolean,
   },
 
   // ======================================================
