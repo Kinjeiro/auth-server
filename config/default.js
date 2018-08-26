@@ -15,6 +15,7 @@ const {
   MONGO_PASSWORD,
   LOGS_PATH = defaultLogsPath,
   DROP_ON_START = false,
+  CONTEXT_PATH,
 } = process.env;
 
 const env = NODE_ENV;
@@ -26,6 +27,10 @@ module.exports = {
     isTest: env === 'test',
     appId: APP_ID,
     appVersion: APP_VERSION,
+
+    app: {
+      contextPath: CONTEXT_PATH,
+    },
   },
 
   server: {
