@@ -47,8 +47,14 @@ export function createPermissionHandlers(options) {
       const diffPermissions = difference(permissions, userPermissions);
       const diffRoles = difference(roles, userRoles);
 
-      if (diffPermissions.length > 0 || diffRoles.length > 0) {
-        throw new PermissionError(diffPermissions, diffRoles);
+      if (
+        (permissions.length > 0 && diffPermissions.length === permissions.length)
+        || (roles.length > 0 && diffRoles.length === roles.length)
+      ) {
+        throw new PermissionError(
+          roles.length > 0 && diffRoles.length === roles.length ? roles : null,
+          permissions.length > 0 && diffPermissions.length === permissions.length ? permissions : null,
+        );
       }
     }
 
@@ -72,6 +78,7 @@ function createRoute(url, handler, options = {}) {
     auth = true,
     method = 'get',
     router = express.Router(),
+    // они передадуться в createPermissionHandlers
     // permissions = [],
     // roles = [],
   } = options;
@@ -81,6 +88,8 @@ function createRoute(url, handler, options = {}) {
     // req.authInfo берет `info` из `BearerStrategy`.
     handlers.push(middlewareBearerStrategy);
   }
+  handlers.push(createPermissionHandlers(options));
+
   if (Array.isArray(handler)) {
     handlers.push(...handler);
   } else {
@@ -90,7 +99,6 @@ function createRoute(url, handler, options = {}) {
   if (handlers.length > 0) {
     router[method.toLowerCase()](
       url,
-      createPermissionHandlers(options),
       ...handlers.map((handlerItem) => asyncHandlerWrapper(handlerItem)),
     );
   }

@@ -6,16 +6,15 @@ export default class PermissionError extends Error {
   permissions = null;
   roles = null;
 
-  constructor(permissions = null, roles = null) {
+  constructor(roles = null, permissions = null) {
     permissions = wrapToArray(permissions);
     roles = wrapToArray(roles);
 
     const message = permissions.length || roles.length
-      ? `
-        Doesn't have 
-        ${permissions.length ? ` permissions [${permissions.join(' ')}]` : ''}
-        ${roles.length ? ` ${permissions.length ? ' and' : ''} roles [${permissions.join(' ')}]` : ''}
-      `
+      ? `Doesn't have\
+${permissions.length ? `permissions [${permissions.join(' or ')}]` : ''}\
+${roles.length ? `${permissions.length ? ' and' : ''} roles [${roles.join(' or ')}]` : ''}\
+`
       : 'Doesn\'t have permissions';
 
     super(message);

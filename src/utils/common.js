@@ -13,7 +13,7 @@ export function wrapToArray(value = null) {
       : [value];
 }
 
-export function includes(first, second, emptyIsInclude = false) {
+export function includes(first, second, emptyIsInclude = false, allIncludes = false) {
   const firstA = wrapToArray(first);
   const secondA = wrapToArray(second);
 
@@ -24,11 +24,11 @@ export function includes(first, second, emptyIsInclude = false) {
     return false;
   }
 
-  return firstA.some((firstValue) => second.includes(firstValue));
+  return firstA[allIncludes ? 'every' : 'some']((firstValue) => secondA.includes(firstValue));
 }
 
-export function difference(first, second) {
-  return lodashDifference(wrapToArray(first), wrapToArray(second));
+export function difference(source, minusValues) {
+  return lodashDifference(wrapToArray(source), wrapToArray(minusValues));
 }
 
 // https://www.npmjs.com/package/destroy-circular
