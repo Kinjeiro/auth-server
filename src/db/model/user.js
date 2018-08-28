@@ -9,7 +9,7 @@ import { generateTokenValue } from '../../utils/common';
 export const PUBLIC_TO_ALL_ATTRS = [
   'username',
   'displayName',
-  'profileImageURI',
+  // 'profileImageURI',
 ];
 export const PROTECTED_ATTRS = [
   ...PUBLIC_TO_ALL_ATTRS,
@@ -18,6 +18,7 @@ export const PROTECTED_ATTRS = [
   'middleName',
   'email',
   'phone',
+  'address',
 ];
 
 export const PUBLIC_EDITABLE_ATTRS = [
@@ -27,6 +28,7 @@ export const PUBLIC_EDITABLE_ATTRS = [
   'displayName',
   'email',
   'phone',
+  'address',
   'profileImageURI',
   'contextData',
 ];
@@ -40,6 +42,11 @@ export const PASSWORD_ATTRS = [
   'hashedPassword',
   'password',
   'salt',
+];
+
+export const OMIT_USER_ATTRS = [
+  ...PASSWORD_ATTRS,
+  'profileImageURI',
 ];
 
 export const ADMIN_ROLE = 'admin';
@@ -110,8 +117,15 @@ export const UserSchema = new mongoose.Schema({
       'Please fill a valid phone',
     ],
   },
+  address: {
+    type: String,
+  },
   profileImageURI: {
     type: String,
+    validate: [
+      (dataUrl) => /data:(.*);base64,(.*)/i.test(dataUrl),
+      'Please fill a valid profileImageURI as base64 dataUrl, like as: data:image/jpeg;base64,iVBORw0KG...',
+    ],
   },
   contextData: {
     type: Map,

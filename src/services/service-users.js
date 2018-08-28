@@ -45,7 +45,9 @@ export async function changeUser(projectId, username, newData) {
   if (attrDiffs.length > 0) {
     logger.error(`При обновлении пользователя "${username}"[${projectId}] была попытка изменить недопустимые полям: `, attrDiffs.join(', '));
   }
-  userRecord.set(pick(newData, PUBLIC_EDITABLE_ATTRS));
+  const changedData = pick(newData, PUBLIC_EDITABLE_ATTRS);
+  logger.log(`Для пользователя "${username}" изменены поля: `, Object.keys(changedData));
+  userRecord.set(changedData);
   userRecord.updated = new Date();
   return userRecord.save();
 }

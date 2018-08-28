@@ -36,11 +36,30 @@ const router = updateRouter(
     } = req;
 
     const user = await getUser(projectId, username);
+    const { profileImageURI } = user;
+
     res.set({
       'Cache-Control': 'public, max-age=86400', // 24 * 60 * 60 - one day
       ETag: user.updated.toISOString(), // etag - это дата обновления пользователя
     });
-    return res.send(user.profileImageURI);
+
+    if (profileImageURI) {
+      // data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAAE
+      const parts = profileImageURI.match(/data:(.*);base64,(.*)/i);
+      const type = parts[1];
+
+      const buffer = Buffer.from(parts[2], 'base64');
+
+      res.set({
+        'Content-Type': type,
+        'Content-Length': buffer.length,
+        'Content-Encoding': 'utf8',
+        // 'Content-Disposition': `attachment; filename=${fileName}`,
+      });
+      return res.send(buffer);
+    }
+
+    return res.status(404).send();
   },
 );
 

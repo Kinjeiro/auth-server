@@ -15,6 +15,7 @@ import {
   PASSWORD_ATTRS,
   PUBLIC_EDITABLE_ATTRS,
   UNIQUE_ATTRS,
+  OMIT_USER_ATTRS,
 } from '../db/model/user';
 
 
@@ -187,7 +188,7 @@ export async function signUp(userData, provider, projectId) {
    */
 
   const resultUser = newUser.toJSON();
-  return omit(resultUser, PASSWORD_ATTRS);
+  return omit(resultUser, OMIT_USER_ATTRS);
 }
 
 // // ======================================================

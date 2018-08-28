@@ -46,7 +46,7 @@ components:
           type: string
         profileImageURI:
           type: string
-          description: data:image base64
+          description: base64 dataUrl: data:image/jpeg;base64,iVBORw0KG...
         contextData:
           type: object
           description: Небольшое хранилище разнообразных данных для пользователей на проектах
@@ -290,7 +290,7 @@ paths:
     get:
       summary: Проверка по access_token информации о валидности прав доступа пользователя.
       description: >
-        Если все актуально возвращается информация о пользователе
+        Если все актуально возвращается информация о пользователе (кроме profileImageURI - его получать через отдельный запрос картинки чтобы кешировать)
 
 
         Благодаря STRATEGY__BEARER_TOKEN - Стартегия 'bearer' (если headers.authorization: `Bearer <OAuth 2.0 token>`) - по токену возвращает пользователя
@@ -497,11 +497,9 @@ paths:
 
       responses:
         '200':
-          description: base64 картинка
-          content:
-            text/html:
-              schema:
-                type: string
+          description: картинка
+        '404':
+          description: если нету аватарки
 
 
 # ===========================

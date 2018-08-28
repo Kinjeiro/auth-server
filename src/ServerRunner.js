@@ -28,9 +28,17 @@ export default class ServerRunner {
   }
 
   getMiddlewarePlugins() {
+    const limit = config.server.serverConfig.maxContentSize;
+
     return [
-      bodyParser.json(),
-      bodyParser.urlencoded({ extended: false }),
+      bodyParser.json({
+        limit,
+      }),
+      bodyParser.urlencoded({
+        limit,
+        extended: false,
+        parameterLimit: 100,
+      }),
       cookieParser(),
       methodOverride(),
       morgan('combined', {

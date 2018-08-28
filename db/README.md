@@ -27,6 +27,7 @@ mongo localhost:27017/admin --eval "db.createUser({user: 'superAdmin', pwd: 'SEC
 
 ### 3. Инсталируем сервис в режиме авторизации
 ```
+net stop MongoDB
 mongod --install --auth --serviceName "MongoDB" --dbpath "B:\mongodb\db" --logpath "B:\mongodb\logs\mongo.log"
 ```
 
@@ -43,7 +44,7 @@ net stop MongoDB
 Добавляем для конкретного проекта клиента и для него моковских пользователей
 
 ```
-npm i && npm i cross-env -g && cross-env PROJECT_ID=<YOUR_PROJECT_ID> USE_MOCK=1 EMAIL_AS_LOGIN=1 npm run mongo:mock
+npm i && npm i cross-env -g && cross-env PROJECT_ID=<YOUR_PROJECT_ID> USE_MOCK=1 EMAIL_AS_LOGIN=1 NODE_ENV=development npm run mongo:mock
 ```
 ```PROJECT_ID``` - projectId или clientId проекта. В корных проектах ```clientId``` равен ```name``` из ```package.json```
 (конфиг ```server.features.auth.applicationClientInfo.client_id```)

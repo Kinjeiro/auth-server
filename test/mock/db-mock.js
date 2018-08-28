@@ -63,6 +63,27 @@ export const USERS = {
     provider: 'local',
     projectId: CLIENTS[projectId].clientId,
   },
+  [projectId]: {
+    username: 'protector',
+    password: `${projectId}${projectId}`,
+
+    displayName: 'protector',
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    email: 'protector@local.com',
+
+    roles: [
+      'user',
+      'protector',
+    ],
+    permissions: [
+    ],
+
+    provider: 'local',
+    projectId,
+    isSystem: true,
+  },
 };
 
 export default {

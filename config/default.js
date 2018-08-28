@@ -41,6 +41,8 @@ module.exports = {
 
     serverConfig: {
       port: PORT,
+      // актуально для размера аватарки пользователя
+      maxContentSize: '3mb',
 
       expressServerOptions: {
       },

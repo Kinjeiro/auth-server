@@ -1,5 +1,6 @@
 import path from 'path';
 import Handlebars from 'handlebars';
+import omit from 'lodash/omit';
 
 import { getHandlebarsTemplate } from '../../utils/node-utils';
 import config from '../../config';
@@ -8,6 +9,7 @@ import logger from '../../helpers/logger';
 import sendMail from '../../helpers/mail-helper';
 import { getProjectId } from '../../helpers/request-data';
 import ValidationError from '../../models/errors/ValidationError';
+import { OMIT_USER_ATTRS } from '../../db/model/user';
 
 import { middlewareClientPasswordStrategy } from '../../auth/authenticate-passport';
 import oauth2TokenMiddlewares from '../../auth/authorization-oauth2';
@@ -115,7 +117,7 @@ createRoute(
     } = req;
 
     res.json({
-      ...user,
+      ...omit(user, OMIT_USER_ATTRS),
       scope: authInfo.scope,
     });
   },
