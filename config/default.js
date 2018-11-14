@@ -51,7 +51,9 @@ module.exports = {
     features: {
       security: {
         token: {
-          tokenLife: 3600,
+          // секунд
+          tokenLife: 3600, // час
+          refreshTokenLife: 604800, // неделя
         },
       },
 

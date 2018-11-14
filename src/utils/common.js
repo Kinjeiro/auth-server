@@ -1,6 +1,21 @@
 import lodashDifference from 'lodash/difference';
 import crypto from 'crypto';
 
+// todo @ANKU @LOW - можно потом сделать jwt токен и удобно проверять expire
+/*
+ https://github.com/auth0/node-jsonwebtoken#tokenexpirederror
+ jwt.verify(token, 'secret', function(err, decoded) {
+ if (err) {
+
+ // err = {
+ // name: 'TokenExpiredError',
+ // message: 'jwt expired',
+ // expiredAt: 1408621000
+ // }
+ }
+});
+if(decodedToken.exp < dateNow.getTime())
+ */
 export function generateTokenValue(bytesLength = 32) {
   return crypto.randomBytes(bytesLength).toString('hex');
 }

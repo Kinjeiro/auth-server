@@ -479,7 +479,7 @@ paths:
 # ===========================
 # ====== user/avatar ========
 # ===========================
-  /api/users/avatar/{username}:
+  /api/users/avatar/{userIdOrAliasId}:
     get:
       summary: Получения аватара пользователя
       tags:
@@ -489,11 +489,11 @@ paths:
 
       parameters:
         - in: path
-          name: username
+          name: userIdOrAliasId
           required: true
           schema:
             type: string
-          description: username
+          description: userIdOrAliasId
 
       responses:
         '200':
@@ -505,7 +505,7 @@ paths:
 # ===========================
 # ====== user/public ========
 # ===========================
-  /api/users/public/{username}:
+  /api/users/public/{userIdOrAliasId}:
     get:
       summary: Получения публичных полей пользователя
       description: Получения публичных полей пользователя любому зарегистрированным пользователем
@@ -516,15 +516,15 @@ paths:
 
       parameters:
         - in: path
-          name: username
+          name: userIdOrAliasId
           required: true
           schema:
             type: string
-          description: username
+          description: userIdOrAliasId
 
       responses:
         '200':
-          description: Обычно это 'username', 'displayName', 'profileImageURI'
+          description: Обычно это 'userId', 'displayName', 'aliasId'
           content:
             application/json:
               schema:
@@ -533,7 +533,7 @@ paths:
 # ===========================
 # ====== user/protected ========
 # ===========================
-  /api/users/protected/{username}:
+  /api/users/protected/{userIdOrAliasId}:
     get:
       summary: Получения защищенных полей пользователя
       description: Получения публичных полей пользователя специальными ролями ('admin' или 'protector')
@@ -544,11 +544,11 @@ paths:
 
       parameters:
         - in: path
-          name: username
+          name: userIdOrAliasId
           required: true
           schema:
             type: string
-          description: username
+          description: userIdOrAliasId
 
       responses:
         '200':
@@ -557,6 +557,35 @@ paths:
             application/json:
               schema:
                 type: object
+
+# =======================================
+# ====== check user unique field ========
+# =======================================
+  /api/users/unique:
+    get:
+      summary: Проверка уникальности значения для поля
+      description: Проверка уникальности значения для поля
+      tags:
+        - users
+      security:
+        - oAuth2Password: [auth]
+      parameters:
+        - in: query
+          name: field
+          schema:
+            type: string
+          description: Название поля
+        - in: query
+          name: value
+          schema:
+            type: string
+          description: Значение поля, которое нужно проверить на уникальность
+
+      responses:
+        '200':
+          description: Проверка успешна
+        '422':
+          description: Значение не уникально
 
 # ===========================
 # ====== user PUT ========
@@ -614,7 +643,7 @@ paths:
 # ===========================
 # ====== user PUT by admin ========
 # ===========================
-  /api/users/{username}:
+  /api/users/{userId}:
     put:
       summary: Обновление данных пользователя админом
       description: Обновление данных пользователя админом
@@ -624,11 +653,11 @@ paths:
         - oAuth2Password: [auth]
       parameters:
         - in: path
-          name: username
+          name: userId
           required: true
           schema:
             type: string
-          description: username
+          description: userId
       requestBody:
         required: true
         content:
@@ -668,11 +697,11 @@ paths:
         - oAuth2Password: [auth]
       parameters:
         - in: path
-          name: username
+          name: userId
           required: true
           schema:
             type: string
-          description: username
+          description: userId
       responses:
         '200':
           description: Все прошло успешно

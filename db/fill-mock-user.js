@@ -36,9 +36,8 @@ if (useMockUsers) {
       projectId,
 
       salt: '7da3614c89b65fa8741f407c58ec11794588097ec6f99de55de076f6aa88e97a',
+      // 123456
       hashedPassword: '647acb992999b68f49d099c69ef7079afba47fd4',
-      updated: new Date(),
-      created: new Date()
     },
     {
       username: 'korolevaU',
@@ -63,8 +62,6 @@ if (useMockUsers) {
 
       salt: '08bfd6fe2aaa0287ea0f728cff9dd3d154ed82f6ab7f13291735c535a1ba82a4',
       hashedPassword: 'a99cf7e3a8b44fb6c2bd19d8dd1ee3a2d98133af',
-      updated: new Date(),
-      created: new Date()
     }
   ]));
 }

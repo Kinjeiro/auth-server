@@ -3,6 +3,7 @@ import { wrapToArray } from '../../utils/common';
 
 export default class PermissionError extends Error {
   status = 403;
+  errorClass = 'PermissionError';
   permissions = null;
   roles = null;
 

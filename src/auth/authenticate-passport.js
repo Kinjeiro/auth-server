@@ -15,7 +15,8 @@ import {
 } from '../db/model';
 import {
   findUserById,
-  findUserByName,
+  // findUserByName,
+  findUserByIdentify,
   validateApplicationClient,
 } from '../services/service-auth';
 
@@ -46,7 +47,7 @@ passport.use(new BasicStrategy(
     try {
       const projectId = getProjectId(req);
       logger.info(`(Authenticate Basic) Check user ${username} [${projectId}]`);
-      const user = await findUserByName(projectId, username, password);
+      const user = await findUserByIdentify(projectId, username, password);
       if (user) {
         logger.info(`-- found user ${user.username}`);
       }
@@ -72,13 +73,11 @@ passport.use(new BearerStrategy(
       }
 
       const {
-        created,
+        expiresIn,
         userId,
       } = token;
 
-      const isExpire = Math.round((Date.now() - created) / 1000) > config.server.features.security.token.tokenLife;
-
-      if (isExpire) {
+      if (Date.now() > expiresIn) {
         logger.info(`-- token for userId "${userId}" expired. Remove access token`);
 
         AccessToken.remove({ token: accessToken }, (error) => {

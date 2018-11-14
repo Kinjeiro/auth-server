@@ -7,13 +7,12 @@ import logger from '../helpers/logger';
 import { getProjectIdFromScope } from '../helpers/request-data';
 
 import {
-  User,
   AccessToken,
   RefreshToken,
 } from '../db/model';
 import {
   findUserById,
-  findUserByName,
+  findUserByIdentify,
 } from '../services/service-auth';
 
 import { middlewareBasicAndClientPasswordStrategy } from './authenticate-passport';
@@ -29,22 +28,24 @@ async function generateTokens(data, done) {
 
   const accessTokenValue = generateTokenValue();
   const token = new AccessToken({
-    ...data,
     token: accessTokenValue,
+    expiresIn: Date.now() + (config.server.features.security.token.tokenLife * 1000), // в конфигах секунды
+    ...data,
   });
   await token.save();
 
   const refreshTokenValue = generateTokenValue();
   const refreshToken = new RefreshToken({
-    ...data,
     token: refreshTokenValue,
+    expiresIn: Date.now() + (config.server.features.security.token.refreshTokenLife * 1000), // в конфигах секунды
+    ...data,
   });
   await refreshToken.save();
 
   return {
     accessTokenValue,
     refreshTokenValue,
-    expiresIn: config.server.features.security.token.tokenLife,
+    expiresIn: token.expiresIn,
   };
 }
 
@@ -56,12 +57,15 @@ export const GRANT_TYPE__PASSWORD = 'password';
 authServer.exchange(
   // \node_modules\oauth2orize\lib\exchange\password.js
   oauth2orize.exchange.password(
-    async (client, username, password, scope, done) => {
+    async (client, identifier, password, scope, done) => {
       try {
         const projectId = client.clientId || getProjectIdFromScope(scope);
-        logger.info(`(Authorization)[Client "${client.clientId}"] generate access_token for user "${username}" [${projectId}]`);
+        logger.info(`(Authorization)[Client "${client.clientId}"] generate access_token for user "${identifier}" [${projectId}]`);
 
-        const user = await findUserByName(projectId, username, password);
+        /**
+         * авторизоваться может с помощью userId \ username \ email
+         */
+        const user = await findUserByIdentify(projectId, identifier, password);
         if (!user) {
           return done(null, false);
         }
@@ -109,23 +113,39 @@ authServer.exchange(
             return done(null, false);
           }
 
-          try {
-            const user = await findUserById(token.userId);
-            logger.info(`--refresh token for user "${user.username}"`);
-            const tokenData = {
-              userId: user.userId,
-              clientId: client.clientId,
-            };
+          const {
+            userId,
+            expiresIn,
+          } = token;
 
-            const {
-              accessTokenValue,
-              refreshTokenValue,
-              expiresIn,
-            } = await generateTokens(tokenData);
+          if (Date.now() > expiresIn) {
+            logger.info(`-- refresh token for userId "${userId}" expired. Remove refresh token`);
 
-            return done(null, accessTokenValue, refreshTokenValue, { expires_in: expiresIn });
-          } catch (error) {
-            return done(error);
+            RefreshToken.remove({ token: refreshToken }, (error) => {
+              if (error) {
+                return done(error);
+              }
+              return done(null, false, { message: 'Refresh token expired' });
+            });
+          } else {
+            try {
+              const user = await findUserById(userId);
+              logger.info(`--refresh token for user "${user.username}"`);
+              const tokenData = {
+                userId,
+                clientId: client.clientId,
+              };
+
+              const {
+                accessTokenValue,
+                refreshTokenValue,
+                expiresIn: expiresInNew,
+              } = await generateTokens(tokenData);
+
+              return done(null, accessTokenValue, refreshTokenValue, { expires_in: expiresInNew });
+            } catch (error) {
+              return done(error);
+            }
           }
         },
       );

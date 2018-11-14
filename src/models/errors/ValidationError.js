@@ -20,6 +20,7 @@
 
 export default class ValidationError extends Error {
   status = 422;
+  errorClass = 'ValidationError';
   validationErrors = {};
 
   constructor(field, msg = null) {

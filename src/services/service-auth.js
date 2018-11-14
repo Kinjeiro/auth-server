@@ -13,10 +13,12 @@ import ResetPasswordToken from '../db/model/resetPasswordToken';
 import {
   User,
   PASSWORD_ATTRS,
-  PUBLIC_EDITABLE_ATTRS,
+  EDITABLE_ATTRS,
   UNIQUE_ATTRS,
-  OMIT_USER_ATTRS,
+  isUserIdValid,
 } from '../db/model/user';
+
+import NotUniqueError from '../models/errors/NotUniqueError';
 
 
 async function clearTokens(userId) {
@@ -89,8 +91,7 @@ function findUser(byId, projectId, idOrQueryMap, password = null, returnRecord =
       if (returnRecord) {
         return resolve(user);
       }
-      const resultUser = user.toJSON({ virtuals: true });
-      return resolve(omit(resultUser, PASSWORD_ATTRS));
+      return resolve(user.getSafeUser());
     }
 
     if (byId) {
@@ -117,10 +118,95 @@ export function findUserByName(projectId, username, password = null, returnRecor
 export function findUserById(userId, password = null, returnRecord = false) {
   return findUser(true, null, userId, password, returnRecord);
 }
-export function findUserByEmail(projectId, email, returnRecord = false) {
+export async function findUserByEmail(projectId, email, password = null, returnRecord = false) {
   return email
-    ? findUser(false, projectId, { email: email.toLowerCase() }, null, returnRecord)
-    : Promise.resolve(null);
+    ? findUser(false, projectId, { email: email.toLowerCase() }, password, returnRecord)
+    : null;
+}
+export async function findUserByAliasId(projectId, aliasId, password = null, returnRecord = false) {
+  return aliasId
+    ? findUser(false, projectId, { aliasId: aliasId.toLowerCase() }, password, returnRecord)
+    : null;
+}
+
+export async function findUserByIdOrAliasId(projectId, userIdOrAliasId, password = null, returnRecord = false) {
+  let user = isUserIdValid(userIdOrAliasId)
+    ? await findUserById(userIdOrAliasId, password, returnRecord)
+    : null;
+  if (!user) {
+    user = await findUserByAliasId(projectId, userIdOrAliasId, password, returnRecord);
+  }
+  return user;
+}
+
+
+
+/**
+ *
+ * @param projectId
+ * @param identifier - это может быть userId, username, email
+ * @param password
+ */
+export async function findUserByIdentify(projectId, identifier, password = null, returnRecord = false) {
+  let user = await findUserByIdOrAliasId(projectId, identifier, password, returnRecord);
+  if (!user) {
+    user = await findUserByName(projectId, identifier, password, returnRecord);
+  }
+  if (!user) {
+    user = await findUserByEmail(projectId, identifier, password, returnRecord);
+  }
+  return user;
+}
+
+
+/**
+ *
+ * @param projectId
+ * @param data
+ * @return [...{ errorId, errorMessage, errorData }]
+ */
+export async function checkUnique(projectId, data) {
+  const uniqueData = data ? pick(data, UNIQUE_ATTRS) : {};
+  const keys = Object.keys(uniqueData);
+  if (keys.length > 0) {
+    const errors = await Promise.all(keys.map(async (key) => {
+      const value = uniqueData[key];
+      let user;
+      switch (key) {
+        case 'username': user = await findUserByName(projectId, value, null, true); break;
+        case 'email': user = await findUserByEmail(projectId, value, null, true); break;
+        case 'aliasId': user = await findUserByAliasId(projectId, value, null, true); break;
+        default:
+          throw new Error(`Не найден провайдер для проверки уникальности поля "${key}".`);
+      }
+      if (user) {
+        return {
+          errorId: 'error.notUnique',
+          errorMessage: `Пользователь с "${key}" равным "${value}" уже существует`,
+          errorData: {
+            key,
+            value,
+          },
+        };
+      }
+      return null;
+    }));
+
+    // убираем пустые
+    return errors.filter((item) => !!item);
+  }
+  return [];
+}
+
+export async function checkUniqueWithError(projectId, data) {
+  const errors = await checkUnique(projectId, data);
+  if (errors.length > 0) {
+    throw new NotUniqueError(errors.reduce((result, { errorMessage, errorData: { key } }) => {
+      // eslint-disable-next-line no-param-reassign
+      result[key] = errorMessage;
+      return result;
+    }, {}));
+  }
 }
 
 
@@ -129,7 +215,7 @@ export function findUserByEmail(projectId, email, returnRecord = false) {
 // ======================================================
 export async function signUp(userData, provider, projectId) {
   const userDataFinal = {
-    ...pick(userData, PUBLIC_EDITABLE_ATTRS),
+    ...pick(userData, EDITABLE_ATTRS),
     username: userData.username,
     password: userData.password,
     provider,
@@ -137,22 +223,11 @@ export async function signUp(userData, provider, projectId) {
   };
   const {
     username,
-    email,
   } = userDataFinal;
 
   logger.info(`[signUp] new user "${username}" [${projectId}]`);
 
-  if (await findUserByName(projectId, username)) {
-    throw new ValidationError('username', `Пользователь с логином "${username}" уже существует`);
-  }
-  if (email && await findUserByEmail(projectId, email)) {
-    throw new ValidationError('email', `Пользователь с email "${email}" уже существует`);
-  }
-  // todo @ANKU @LOW - остальные UNIQUE_ATTRS
-  // const existUser = await User.findOne({
-  //   ...UNIQUE_ATTRS,
-  //   projectId,
-  // }).exec();
+  await checkUniqueWithError(projectId, userDataFinal);
 
   const newUser = new User(userDataFinal);
   await newUser.save();
@@ -187,8 +262,7 @@ export async function signUp(userData, provider, projectId) {
    }
    */
 
-  const resultUser = newUser.toJSON();
-  return omit(resultUser, OMIT_USER_ATTRS);
+  return newUser.getSafeUser();
 }
 
 // // ======================================================
