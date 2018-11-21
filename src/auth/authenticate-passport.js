@@ -73,11 +73,11 @@ passport.use(new BearerStrategy(
       }
 
       const {
-        expiresIn,
+        expiresInDate,
         userId,
       } = token;
 
-      if (Date.now() > expiresIn) {
+      if (Date.now() > expiresInDate.getTime()) {
         logger.info(`-- token for userId "${userId}" expired. Remove access token`);
 
         AccessToken.remove({ token: accessToken }, (error) => {

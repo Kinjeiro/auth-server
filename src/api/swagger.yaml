@@ -313,7 +313,10 @@ paths:
                     type: string
                   expires_in:
                     type: number
-                    description: seconds
+                    description: duration in seconds
+                  expires_in_date:
+                    type: string
+                    description: date iso when expired
                   token_type:
                     type: string
                     description: "Bearer"

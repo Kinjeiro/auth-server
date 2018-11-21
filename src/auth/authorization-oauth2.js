@@ -29,7 +29,8 @@ async function generateTokens(data, done) {
   const accessTokenValue = generateTokenValue();
   const token = new AccessToken({
     token: accessTokenValue,
-    expiresIn: Date.now() + (config.server.features.security.token.tokenLife * 1000), // в конфигах секунды
+    expiresIn: config.server.features.security.token.tokenLife, // в конфигах секунды
+    expiresInDate: new Date(Date.now() + (config.server.features.security.token.tokenLife * 1000)), // в конфигах секунды
     ...data,
   });
   await token.save();
@@ -37,7 +38,8 @@ async function generateTokens(data, done) {
   const refreshTokenValue = generateTokenValue();
   const refreshToken = new RefreshToken({
     token: refreshTokenValue,
-    expiresIn: Date.now() + (config.server.features.security.token.refreshTokenLife * 1000), // в конфигах секунды
+    expiresIn: config.server.features.security.token.refreshTokenLife, // в конфигах секунды
+    expiresInDate: new Date(Date.now() + (config.server.features.security.token.refreshTokenLife * 1000)), // в конфигах секунды
     ...data,
   });
   await refreshToken.save();
@@ -46,6 +48,7 @@ async function generateTokens(data, done) {
     accessTokenValue,
     refreshTokenValue,
     expiresIn: token.expiresIn,
+    expiresInDate: token.expiresInDate,
   };
 }
 
@@ -78,9 +81,13 @@ authServer.exchange(
           accessTokenValue,
           refreshTokenValue,
           expiresIn,
+          expiresInDate,
         } = await generateTokens(tokenData);
 
-        return done(null, accessTokenValue, refreshTokenValue, { expires_in: expiresIn });
+        return done(null, accessTokenValue, refreshTokenValue, {
+          expires_in: expiresIn,
+          expires_in_date: expiresInDate,
+        });
       } catch (error) {
         return done(error);
       }
@@ -115,10 +122,10 @@ authServer.exchange(
 
           const {
             userId,
-            expiresIn,
+            expiresInDate,
           } = token;
 
-          if (Date.now() > expiresIn) {
+          if (Date.now() > expiresInDate.getTime()) {
             logger.info(`-- refresh token for userId "${userId}" expired. Remove refresh token`);
 
             RefreshToken.remove({ token: refreshToken }, (error) => {
@@ -140,9 +147,13 @@ authServer.exchange(
                 accessTokenValue,
                 refreshTokenValue,
                 expiresIn: expiresInNew,
+                expiresInDate: expiresInDateNew,
               } = await generateTokens(tokenData);
 
-              return done(null, accessTokenValue, refreshTokenValue, { expires_in: expiresInNew });
+              return done(null, accessTokenValue, refreshTokenValue, {
+                expires_in: expiresInNew,
+                expires_in_date: expiresInDateNew,
+              });
             } catch (error) {
               return done(error);
             }

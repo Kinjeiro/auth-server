@@ -37,7 +37,17 @@ export const AccessTokenSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  /**
+   * Длительность в секундах - по стандарту передаем именно время жизни в секундах, а не когда кончится
+   * https://www.oauth.com/oauth2-servers/access-tokens/access-token-response/
+   */
   expiresIn: {
+    type: Number,
+  },
+  /**
+   * Когда истекает
+   */
+  expiresInDate: {
     type: Date,
   },
 });

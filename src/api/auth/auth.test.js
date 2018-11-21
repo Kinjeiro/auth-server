@@ -84,14 +84,18 @@ describe('[api] auth', function anon() {
             userData: {
               ...testNewUser,
               username: testUser.username,
+              email: testUser.email,
             },
           });
         expect(true).to.be.false;
       } catch (errorResponse) {
         expect(errorResponse.response.body.status).to.equal(422);
-        expect(Object.keys(errorResponse.response.body.validationErrors)).has.length(1);
+        console.warn('ANKU , errorResponse.response.body', errorResponse.response.body);
+        expect(Object.keys(errorResponse.response.body.validationErrors)).has.length(2);
         expect(errorResponse.response.body.validationErrors.username)
-          .to.equal(`Пользователь с логином "${testUser.username}" уже существует`);
+          .to.equal(`Пользователь с "username" равным "${testUser.username}" уже существует`);
+        expect(errorResponse.response.body.validationErrors.email)
+          .to.equal(`Пользователь с "email" равным "${testUser.email}" уже существует`);
       }
     });
 
@@ -175,7 +179,6 @@ describe('[api] auth', function anon() {
          stack: 'TokenError: Invalid resource owner credentials
          */
         expect(errorResponse.response.status).to.equal(403);
-        console.warn('ANKU , errorResponse.response.body', errorResponse.response.body);
         expect(errorResponse.response.body.message).to.equal('Invalid resource owner credentials');
       }
     });
@@ -200,7 +203,8 @@ describe('[api] auth', function anon() {
        res.body = {
          "access_token": "395549ac90cd6f37cbc28c6cb5b31aa8ffe2a22826831dba11d6baae9dafb07a",
          "refresh_token": "857896e0aab5b35456f6432ef2f812a344e2a3bab12d38b152ee3dd968442613",
-         "expires_in": 3600,
+         "expires_in": 3600, //seconds
+         "expires_in_date": <date iso>,
          "token_type": "Bearer"
        }
       */
@@ -209,6 +213,8 @@ describe('[api] auth', function anon() {
       expect(tokenInfo.refresh_token).not.to.be.empty();
       expect(tokenInfo.access_token).not.to.be.equal(tokenInfo.refresh_token);
       expect(tokenInfo.expires_in).to.equal(config.server.features.security.token.tokenLife);
+      expect((new Date(tokenInfo.expires_in_date)).getTime() < (Date.now() + (config.server.features.security.token.tokenLife * 1000)))
+        .to.equal(true);
       expect(tokenInfo.token_type).to.equal('Bearer');
     });
 
