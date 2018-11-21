@@ -4,7 +4,7 @@ const {
   PROJECT_ID,
   USE_MOCK,
   NODE_ENV,
-  EMAIL_AS_LOGIN,
+  // EMAIL_AS_LOGIN,
 } = process.env;
 
 const projectId = PROJECT_ID || 'mockServer';
@@ -25,7 +25,8 @@ export const CLIENTS = {
 
 export const USERS = {
   ivanovI: {
-    username: EMAIL_AS_LOGIN ? 'ivanovI@local.com' : 'ivanovI',
+    // username: EMAIL_AS_LOGIN ? 'ivanovI@local.com' : 'ivanovI',
+    username: 'ivanovI',
     password: '123456',
 
     displayName: 'Ivanov I. I.',
@@ -43,7 +44,8 @@ export const USERS = {
     projectId: CLIENTS[projectId].clientId,
   },
   korolevaU: {
-    username: EMAIL_AS_LOGIN ? 'korolevaU@local.com' : 'korolevaU',
+    // username: EMAIL_AS_LOGIN ? 'korolevaU@local.com' : 'korolevaU',
+    username: 'korolevaU',
     password: '123456',
 
     displayName: 'Koroleva U. A.',

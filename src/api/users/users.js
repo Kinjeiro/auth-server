@@ -15,10 +15,16 @@ import {
   getProtectedUserInfo,
   getUserAvatar,
   changeUser,
+  changePassword,
   removeUser,
   removeUsers,
 } from '../../services/service-users';
 
+
+
+// ======================================================
+// ============== NO AUTH ===============================
+// ======================================================
 
 // ======================================================
 // get avatar
@@ -33,8 +39,8 @@ const router = updateRouter(
       params: {
         userIdOrAliasId,
       },
-      user: {
-        projectId,
+      headers: {
+        project_id: projectId,
       },
     } = req;
 
@@ -66,6 +72,9 @@ const router = updateRouter(
 
     return res.status(404).send();
   },
+  {
+    auth: false,
+  },
 );
 
 // ======================================================
@@ -81,8 +90,8 @@ updateRouter(
       params: {
         userIdOrAliasId,
       },
-      user: {
-        projectId,
+      headers: {
+        project_id: projectId,
       },
     } = req;
 
@@ -91,8 +100,42 @@ updateRouter(
   },
   {
     router,
+    auth: false,
   },
 );
+
+// ======================================================
+// check user unique field
+// ======================================================
+/**
+ * @see - \src\api\swagger.yaml
+ */
+updateRouter(
+  '/unique',
+  async (req, res) => {
+    const {
+      headers: {
+        project_id: projectId,
+      },
+      query: {
+        field,
+        value,
+      },
+    } = req;
+
+    await checkUniqueWithError(projectId, { [field]: value });
+    return res.json({ result: true });
+  },
+  {
+    router,
+    auth: false,
+  },
+);
+
+
+// ======================================================
+// ================ AUTH ================================
+// ======================================================
 
 // ======================================================
 // get protected info by admin \ protected
@@ -123,33 +166,6 @@ updateRouter(
 
 
 // ======================================================
-// check user unique field
-// ======================================================
-/**
- * @see - \src\api\swagger.yaml
- */
-updateRouter(
-  '/unique',
-  async (req, res) => {
-    const {
-      user: {
-        projectId,
-      },
-      query: {
-        field,
-        value,
-      },
-    } = req;
-
-    await checkUniqueWithError(projectId, { [field]: value });
-    return res.json();
-  },
-  {
-    router,
-  },
-);
-
-// ======================================================
 // change user
 // ======================================================
 /**
@@ -166,8 +182,36 @@ updateRouter(
       body,
     } = req;
 
-    await changeUser(projectId, userId, body);
-    return res.json();
+    const user = await changeUser(projectId, userId, body);
+    return res.json(user);
+  },
+  {
+    router,
+    method: 'PUT',
+  },
+);
+
+// ======================================================
+// change password
+// ======================================================
+/**
+ * @see - \src\api\swagger.yaml
+ */
+updateRouter(
+  '/changePassword',
+  async (req, res) => {
+    const {
+      user: {
+        userId,
+        // projectId,
+      },
+      body: {
+        newPassword,
+        oldPassword,
+      },
+    } = req;
+    await changePassword(userId, newPassword, oldPassword);
+    return res.json({ result: true });
   },
   {
     router,
@@ -192,7 +236,7 @@ updateRouter(
     } = req;
 
     await removeUser(projectId, userId);
-    return res.json();
+    return res.json({ result: true });
   },
   {
     router,
@@ -220,8 +264,8 @@ updateRouter(
       },
     } = req;
 
-    await changeUser(projectId, userId, body);
-    return res.json();
+    const user = await changeUser(projectId, userId, body);
+    return res.json(user);
   },
   {
     router,
@@ -249,7 +293,7 @@ updateRouter(
     } = req;
 
     await removeUser(getProjectId(req) || projectId, userId);
-    return res.json();
+    return res.json({ result: true });
   },
   {
     router,
@@ -273,7 +317,7 @@ updateRouter(
       },
     } = req;
     await removeUsers(getProjectId(req) || projectId);
-    return res.json();
+    return res.json({ result: true });
   },
   {
     router,

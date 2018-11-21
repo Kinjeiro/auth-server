@@ -59,7 +59,19 @@ export async function changeUser(projectId, userId, newData) {
   logger.log(`Для пользователя "${userId}:${userRecord.get('email')}" изменены поля: `, Object.keys(changedData));
   userRecord.set(changedData);
   userRecord.updated = new Date();
-  return userRecord.save();
+  await userRecord.save();
+
+  return userRecord.getSafeUser();
+}
+
+export async function changePassword(userId, newPassword, oldPassword) {
+  const userRecord = await findUserById(userId, null, true);
+  if (!userRecord.checkPassword(oldPassword)) {
+    throw new ValidationError('password', 'Old password is incorrect');
+  }
+  userRecord.set('password', newPassword);
+  userRecord.updated = new Date();
+  await userRecord.save();
 }
 
 export async function removeUser(projectId, userId) {

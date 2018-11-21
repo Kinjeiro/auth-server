@@ -28,7 +28,7 @@
     "start:production": "cross-env NODE_ENV=production npm run start-build",
     "start:development": "cross-env NODE_ENV=development npm run start-build",
     "----- MONGO DB -----": "----------",
-    "--example mongo:mock": "cross-env PROJECT_ID=myProject USE_MOCK=1 EMAIL_AS_LOGIN=1 NODE_ENV=development npm run mongo:mock",
+    "--example mongo:mock": "cross-env PROJECT_ID=myProject USE_MOCK=1 NODE_ENV=development npm run mongo:mock",
     "mongo:mock": "node --require babel-register ./test/mock/generateDBData.js",
     "mongo:run:unix": "mongod --fork --port 27017 --auth && npm run mongo:mock",
     "mongo:install:windows": "mongod --install --serviceName \"MongoDB\" --dbpath \"B:\\mongodb\\db\" --logpath \"B:\\mongodb\\logs\\mongo.log\"",

@@ -23,35 +23,75 @@ components:
             auth: All auth scopes
 
   schemas:
+    UserPublic:
+      description: Публичная информация о пользователе
+      type: object
+      properties:
+        userId:
+          type: string
+        displayName:
+          type: string
+        aliasId:
+          type: string
+        description:
+          type: string
+        computedDisplayName:
+          type: string
+          description: Калькулируемое поле: displayName || aliasId || userId
     User:
       description: Пользователь
       type: object
       properties:
-        username:
+        userId:
           type: string
-        password:
+        displayName:
           type: string
-          description: Заполняется только при регистрации
+        aliasId:
+          type: string
+        description:
+          type: string
+        computedDisplayName:
+          type: string
+          description: Калькулируемое поле: displayName || aliasId || userId
         firstName:
           type: string
         lastName:
           type: string
         middleName:
           type: string
-        displayName:
-          type: string
         email:
           type: string
         phone:
           type: string
-        profileImageURI:
+        address:
           type: string
-          description: base64 dataUrl: data:image/jpeg;base64,iVBORw0KG...
+        password:
+          type: string
+          description: Заполняется только при регистрации
+        username:
+          type: string
+        userType:
+          type: string
+        provider:
+          type: string
+        providerScopes:
+          type: array
+        providerData:
+          type: object
+        created:
+          type: string
+        updated:
+          type: string
+        comment:
+          type: string
+        roles:
+          type: array
+        permissions:
+          type: array
         contextData:
           type: object
           description: Небольшое хранилище разнообразных данных для пользователей на проектах
       required:
-         - username
          - email
 
     EmailOptions:
@@ -76,7 +116,7 @@ components:
         required: true
       description: \"Bearer <OAuth 2.0 token>\" - access_token
 
-    projectId:
+    project_id:
       in: header
       name: project_id
       schema:
@@ -112,7 +152,7 @@ paths:
       tags:
         - auth
       parameters:
-        - $ref: '#/components/parameters/projectId'
+        - $ref: '#/components/parameters/project_id'
       requestBody:
         required: true
         content:
@@ -206,7 +246,7 @@ paths:
             type: string
             required: false
           description: если крендешиался поступают через basic: `Basic <base64-encoded credentials>`
-        - $ref: '#/components/parameters/projectId'
+        - $ref: '#/components/parameters/project_id'
 
       requestBody:
         required: true
@@ -344,7 +384,7 @@ paths:
       tags:
         - auth
       parameters:
-        - $ref: '#/components/parameters/projectId'
+        - $ref: '#/components/parameters/project_id'
       requestBody:
         required: true
         content:
@@ -484,10 +524,8 @@ paths:
       summary: Получения аватара пользователя
       tags:
         - users
-      security:
-        - oAuth2Password: [auth]
-
       parameters:
+        - $ref: '#/components/parameters/project_id'
         - in: path
           name: userIdOrAliasId
           required: true
@@ -511,24 +549,21 @@ paths:
       description: Получения публичных полей пользователя любому зарегистрированным пользователем
       tags:
         - users
-      security:
-        - oAuth2Password: [auth]
-
       parameters:
+        - $ref: '#/components/parameters/project_id'
         - in: path
           name: userIdOrAliasId
           required: true
           schema:
             type: string
           description: userIdOrAliasId
-
       responses:
         '200':
-          description: Обычно это 'userId', 'displayName', 'aliasId'
+          description: Публичная информация пользователя, доступная без авторизации для всех
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/UserPublic'
 
 # ===========================
 # ====== user/protected ========
@@ -567,9 +602,8 @@ paths:
       description: Проверка уникальности значения для поля
       tags:
         - users
-      security:
-        - oAuth2Password: [auth]
       parameters:
+        - $ref: '#/components/parameters/project_id'
         - in: query
           name: field
           schema:
@@ -584,6 +618,13 @@ paths:
       responses:
         '200':
           description: Проверка успешна
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
         '422':
           description: Значение не уникально
 
@@ -606,6 +647,12 @@ paths:
             schema:
               type: object
               properties:
+                username:
+                  type: string
+                aliasId:
+                  type: string
+                email:
+                  type: string
                 firstName:
                   type: string
                 lastName:
@@ -614,9 +661,13 @@ paths:
                   type: string
                 displayName:
                   type: string
-                email:
-                  type: string
                 phone:
+                  type: string
+                address:
+                  type: string
+                description:
+                  type: string
+                comment:
                   type: string
                 profileImageURI:
                   type: string
@@ -624,7 +675,45 @@ paths:
                   type: object
       responses:
         '200':
+          description: Измененные объект пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+# ===========================
+# ====== user changePassword ========
+# ===========================
+  /api/users/changePassword:
+    put:
+      summary: Смена пароля
+      description: Смена пароля
+      tags:
+        - users
+      security:
+        - oAuth2Password: [auth]
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newPassword:
+                  type: string
+                oldPassword:
+                  type: string
+      responses:
+        '200':
           description: Все прошло успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
 
 # ===========================
 # ====== user delete ========
@@ -639,6 +728,13 @@ paths:
       responses:
         '200':
           description: Все прошло успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
 
 # ===========================
 # ====== user PUT by admin ========
@@ -684,6 +780,10 @@ paths:
       responses:
         '200':
           description: Все прошло успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
 
 # ===========================
 # ====== user delete by admin ========
@@ -705,6 +805,13 @@ paths:
       responses:
         '200':
           description: Все прошло успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
 
 
 # ===========================
@@ -720,3 +827,10 @@ paths:
       responses:
         '200':
           description: Все прошло успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: boolean
