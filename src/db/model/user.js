@@ -13,11 +13,12 @@ export const PUBLIC_TO_ALL_ATTRS = [
   'displayName',
   'aliasId',
   'description',
+  'computedDisplayName',
   // 'profileImageURI', - получать через отдельное api
 ];
 export const PROTECTED_ATTRS = [
   ...PUBLIC_TO_ALL_ATTRS,
-  'username',
+  // 'username',
   'firstName',
   'lastName',
   'middleName',
@@ -258,6 +259,11 @@ UserSchema.virtual('password')
   })
   .get(function () {
     return this._plainPassword;
+  });
+
+UserSchema.virtual('computedDisplayName')
+  .get(function () {
+    return this.get('displayName') || this.get('aliasId') || this.get('userId');
   });
 
 // ======================================================
