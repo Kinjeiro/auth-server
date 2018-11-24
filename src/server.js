@@ -1,3 +1,6 @@
+// для логирования времени
+require('log-timestamp');
+
 const ServerRunner = require('./ServerRunner').default;
 
 const runner = new ServerRunner();
