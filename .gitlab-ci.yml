@@ -163,8 +163,8 @@ stages:
     - echo "Test ssh connection" $TARGET_USER_FINAL $TARGET_HOST
     - ssh -o StrictHostKeyChecking=no -T "$TARGET_USER_FINAL@$TARGET_HOST"
 
-    - echo "Token $CI_JOB_TOKEN"
-    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com:reagentum/reafront/auth-server-oauth2.git".insteadOf git@gitlab.com:reagentum/reafront/auth-server-oauth2.git
+#    - echo "Token $CI_JOB_TOKEN"
+#    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com:reagentum/reafront/auth-server-oauth2.git".insteadOf git@gitlab.com:reagentum/reafront/auth-server-oauth2.git
 
 
 #// ======================================================
@@ -174,8 +174,8 @@ stages:
   script:
     - echo "====== Deploy to $DEPLOY_ENV server ======"
     - pm2 report
-    - echo "Setup tagget server directories"
-    - pm2 deploy ecosystem.config.js $DEPLOY_ENV setup 2>&1 || true
+#    - echo "Setup tagget server directories"
+#    - pm2 deploy ecosystem.config.js $DEPLOY_ENV setup 2>&1 || true
 
     - echo "make deploy"
     - pm2 deploy ecosystem.config.js $DEPLOY_ENV
