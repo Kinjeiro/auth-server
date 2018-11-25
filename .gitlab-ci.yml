@@ -120,8 +120,8 @@ stages:
     - chmod 700 ~/.ssh
 
 #    // todo @ANKU @CRIT @MAIN @debugger -
-    - echo "$TARGET_PRIVATE_SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-    - chmod 700 ~/.ssh && chmod 600 ~/.ssh/*
+#    - echo "$TARGET_PRIVATE_SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+#    - chmod 700 ~/.ssh && chmod 600 ~/.ssh/*
 
     ##
     ## Use ssh-keyscan to scan the keys of your private server. Replace gitlab.com
