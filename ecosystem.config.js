@@ -37,10 +37,12 @@ const PROD_APP_PATH = process.env.PROD_APP_PATH
 
 // Your repository
 // const REPO = 'git@gitlab.com:<project_name>.git';
-let REPO = process.env.REPO || packageJson.repository;
-console.warn('ANKU , REPO', REPO);
-REPO = `git${REPO.substr(REPO.indexOf('@'))}`;
-console.warn('ANKU , REPO 2', REPO);
+const REPO = process.env.REPO || packageJson.repository;
+// let REPO = process.env.REPO || packageJson.repository;
+// console.warn('ANKU , REPO', REPO);
+// REPO = `git${REPO.substr(REPO.indexOf('@'))}`;
+// console.warn('ANKU , REPO 2', REPO);
+
 // const DEV_CONTEXT_PATH = process.env.DEV_CONTEXT_PATH;
 // const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : undefined;
 
@@ -71,8 +73,9 @@ function deployOptions(isProduction = false) {
 
     // установить на удаленном сервере последнюю версию приложения
     path: isProduction ? PROD_APP_PATH : DEV_APP_PATH,
+
     'post-deploy': `\
-      npm install\
+      npm install --no-save\
       && npm run ${isProduction ? 'build:production' : 'build:development'}\
       && pm2 startOrRestart ecosystem.config.js ${isProduction ? '--env production' : '--env development'}\
       && pm2 save\
