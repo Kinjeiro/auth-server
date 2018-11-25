@@ -48,12 +48,6 @@ const REPO = process.env.REPO || packageJson.repository;
 // const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : undefined;
 
 const START_SCRIPT = process.env.START_SCRIPT || './.build/server.js';
-console.warn('ANKU , START_SCRIPT', START_SCRIPT);
-
-const appsOptions = {
-  // PORT,
-  // SERVER_PORT: PORT,
-};
 
 function deployOptions(isProduction = false) {
   const APP_PATH = isProduction ? PROD_APP_PATH : DEV_APP_PATH;
@@ -88,7 +82,8 @@ function deployOptions(isProduction = false) {
     //    fatal: Authentication failed for 'https://gitlab-ci-token:8p4t-abFSKvu691gZ6UL@gitlab.com/reagentum/reafront/auth-server-oauth2.git/'
     // выход из этой ситуации чтобы setup отрападывал без ошибок, поэтому добавили чтобы перед сетапом pm2 всегда очищал папку
     // pm2 ecosystem.config.js: 'pre-setup': `rm -rf ${APP_PATH}`,
-    'pre-setup': `rm -rf ${APP_PATH}`,
+    // pm2 создает папки: current, source и shared. Вот удаляем source
+    'pre-setup': `rm -rf ${APP_PATH}/source`,
     // 'post-setup': "apt-get install git ; ls -la",
     // 'pre-deploy-local': `\
     //   echo 'This is a local executed command'\
@@ -125,13 +120,9 @@ module.exports = {
       name: appName,
       script: START_SCRIPT,
       env_development: {
-        ...appsOptions,
         NODE_ENV: 'development',
-        APP_MOCKS: 1,
-        USE_MOCKS: 1,
       },
       env_production: {
-        ...appsOptions,
         NODE_ENV: 'production',
       },
     }

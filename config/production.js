@@ -12,6 +12,12 @@ module.exports = {
       //     testUri: TEST_MONGO_URI || 'mongodb://localhost:27017/auth-serverTest',
       //   },
       // },
+      mocking: {
+        enable: true,
+        useMocks: true,
+        authMock: false,
+        // authMock: true,
+      },
     },
   },
 };

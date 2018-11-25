@@ -15,6 +15,12 @@ module.exports = {
       //     testUri: TEST_MONGO_URI || 'mongodb://dev.reagentum.ru:27017/auth-serverTest',
       //   },
       // },
+      mocking: {
+        enable: true,
+        useMocks: true,
+        // authMock: false
+        authMock: true,
+      },
     },
   },
 };
