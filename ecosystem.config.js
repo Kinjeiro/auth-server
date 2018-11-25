@@ -64,7 +64,7 @@ function deployOptions(isProduction = false) {
     //  чтобы подключить к удаленному серверу
     //  */
     // // из .gitlab-ci.yml: в docker gitlab runner сохранияется ключ к dev серверу в файл
-    key: '~/.ssh/id_rsa',
+    // key: '~/.ssh/id_rsa',
     user: isProduction ? PROD_USER : DEV_USER,
     host: isProduction ? PROD_HOST : DEV_HOST,
     ssh_options: ['StrictHostKeyChecking=no', 'PasswordAuthentication=no'],
@@ -78,10 +78,15 @@ function deployOptions(isProduction = false) {
     // установить на удаленном сервере последнюю версию приложения
     path: APP_PATH,
 
-    'pre-deploy-local': `\
-      echo 'This is a local executed command'\
-      mkdir -p ${APP_PATH}\
-    `,
+    // 'pre-setup': "apt-get install git ; ls -la",
+    // todo @ANKU @CRIT @MAIN @debugger - пробуем чтобы setup исполнялся правильно
+    // todo @ANKU @CRIT @MAIN @debugger - тут безопасность нужно проверять путь, а то весь сервер можно удалить
+    'pre-setup': `rm -rf ${APP_PATH}`,
+    // 'post-setup': "apt-get install git ; ls -la",
+    // 'pre-deploy-local': `\
+    //   echo 'This is a local executed command'\
+    //   mkdir -p ${APP_PATH}\
+    // `,
     'post-deploy': `\
       npm install --no-save\
       && npm run ${isProduction ? 'build:production' : 'build:development'}\

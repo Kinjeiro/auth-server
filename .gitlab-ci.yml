@@ -122,8 +122,6 @@ stages:
 #    // todo @ANKU @CRIT @MAIN @debugger -
     - echo "$TARGET_PRIVATE_SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
     - chmod 700 ~/.ssh && chmod 600 ~/.ssh/*
-    - echo "id_rsa Private key"
-    - cat ~/.ssh/id_rsa
 
     ##
     ## Use ssh-keyscan to scan the keys of your private server. Replace gitlab.com
@@ -183,8 +181,8 @@ stages:
     - echo "====== Deploy to $DEPLOY_ENV server ======"
     - pm2 report
 
-#    - echo "Setup tagget server directories"
-#    - pm2 deploy ecosystem.config.js $DEPLOY_ENV setup 2>&1 || true
+    - echo "Setup tagget server directories"
+    - pm2 deploy ecosystem.config.js $DEPLOY_ENV setup 2>&1 || true
 
     - echo "make deploy"
     - pm2 deploy ecosystem.config.js $DEPLOY_ENV --force
