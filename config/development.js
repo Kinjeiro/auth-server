@@ -4,6 +4,9 @@ const {
 } = process.env;
 
 module.exports = {
+  common: {
+    // contextPath: '',
+  },
   server: {
     features: {
       // db: {
