@@ -182,11 +182,12 @@ stages:
   script:
     - echo "====== Deploy to $DEPLOY_ENV server ======"
     - pm2 report
-    - echo "Setup tagget server directories"
-    - pm2 deploy ecosystem.config.js $DEPLOY_ENV setup 2>&1 || true
+
+#    - echo "Setup tagget server directories"
+#    - pm2 deploy ecosystem.config.js $DEPLOY_ENV setup 2>&1 || true
 
     - echo "make deploy"
-    - pm2 deploy ecosystem.config.js $DEPLOY_ENV
+    - pm2 deploy ecosystem.config.js $DEPLOY_ENV --force
 
 
 #// ======================================================

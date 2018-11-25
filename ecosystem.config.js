@@ -55,6 +55,7 @@ const appsOptions = {
 };
 
 function deployOptions(isProduction = false) {
+  const APP_PATH = isProduction ? PROD_APP_PATH : DEV_APP_PATH;
   return {
     // мы кладем ключ в DEPLOY KEYS в gitlab CI
     // /*
@@ -75,8 +76,12 @@ function deployOptions(isProduction = false) {
     // todo @ANKU @LOW - хорошо бы этот ключ заранее передавать либо сделать один ключ на сервер и на gitlab и использовать ForwardAgent=yes
 
     // установить на удаленном сервере последнюю версию приложения
-    path: isProduction ? PROD_APP_PATH : DEV_APP_PATH,
+    path: APP_PATH,
 
+    'pre-deploy-local': `\
+      echo 'This is a local executed command'\
+      mkdir -p ${APP_PATH}\
+    `,
     'post-deploy': `\
       npm install --no-save\
       && npm run ${isProduction ? 'build:production' : 'build:development'}\
