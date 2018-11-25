@@ -122,13 +122,10 @@ module.exports = {
         NODE_ENV: 'development',
         APP_MOCKS: 1,
         USE_MOCKS: 1,
-
-        ...(process.env.DEV_NODE_ENV_JSON ? JSON.parse(process.env.DEV_NODE_ENV_JSON) : {})
       },
       env_production: {
         ...appsOptions,
         NODE_ENV: 'production',
-        ...(process.env.PROD_NODE_ENV_JSON ? JSON.parse(process.env.PROD_NODE_ENV_JSON) : {})
       },
     }
   ]

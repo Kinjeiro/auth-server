@@ -11,14 +11,11 @@
 #   DEV_HOST
 #   DEV_USER
 #   DEV_APP_PATH
-#   DEV_NODE_ENV_JSON - json для доп node env
-#   START_SCRIPT - ./.build/server.js по умолчанию
 #
 #   PROD_PRIVATE_SSH_KEY
 #   PROD_HOST
 #   PROD_USER
 #   PROD_APP_PATH
-#   DEV_NODE_ENV_JSON - json для доп node env
 
 # Достпуны переменные от Gitlab CI - https://docs.gitlab.com/ee/ci/variables/#predefined-variables-environment-variables
 # $CI_COMMIT_REF_NAME -
@@ -86,10 +83,7 @@ stages:
       echo "TARGET_USER: $TARGET_USER"
       echo "TARGET_USER_FINAL: $TARGET_USER_FINAL"
       echo "TARGET_PRIVATE_SSH_KEY: true"
-
-      echo "TARGET_NODE_ENV_JSON: $TARGET_NODE_ENV_JSON"
       echo "TARGET_APP_PATH: $TARGET_APP_PATH"
-      echo "START_SCRIPT: $START_SCRIPT"
       echo "==============================="
 
 #    ##
@@ -208,7 +202,6 @@ deploy_dev:
 #    TARGET_USER: ${DEV_USER:-root}
     TARGET_USER: $DEV_USER
     TARGET_APP_PATH: $DEV_APP_PATH
-    TARGET_NODE_ENV_JSON: $DEV_NODE_ENV_JSON
 
   <<: *deploy_ssh_key
   <<: *deploy_by_pm2
@@ -232,7 +225,6 @@ deploy_prod:
     TARGET_PRIVATE_SSH_KEY: $PROD_PRIVATE_SSH_KEY
     TARGET_USER: $PROD_USER
     TARGET_APP_PATH: $PROD_APP_PATH
-    TARGET_NODE_ENV_JSON: $PROD_NODE_ENV_JSON
 
   <<: *deploy_ssh_key
   <<: *deploy_by_pm2
