@@ -37,7 +37,9 @@ const PROD_APP_PATH = process.env.PROD_APP_PATH
 
 // Your repository
 // const REPO = 'git@gitlab.com:<project_name>.git';
-const REPO = process.env.REPO || packageJson.repository;
+// const REPO = process.env.REPO || packageJson.repository;
+const REPO = 'git@gitlab.com:reagentum/reafront/auth-server-oauth2.git';
+
 // let REPO = process.env.REPO || packageJson.repository;
 // console.warn('ANKU , REPO', REPO);
 // REPO = `git${REPO.substr(REPO.indexOf('@'))}`;
