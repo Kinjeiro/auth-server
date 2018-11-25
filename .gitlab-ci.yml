@@ -33,7 +33,7 @@
 # Docker gitlab runner executer
 
 # https://pm2.io/doc/en/runtime/integration/docker/
-image: keymetrics/pm2
+image: keymetrics/pm2:latest-alpine
 
 stages:
   - deploy
