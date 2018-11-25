@@ -6,12 +6,12 @@ const {
 module.exports = {
   server: {
     features: {
-      db: {
-        mongoose: {
-          uri: MONGO_URI || 'mongodb://front.reagentum.ru:27017/auth-server',
-          testUri: TEST_MONGO_URI || 'mongodb://front.reagentum.ru:27017/auth-serverTest',
-        },
-      },
+      // db: {
+      //   mongoose: {
+      //     uri: MONGO_URI || 'mongodb://localhost:27017/auth-server',
+      //     testUri: TEST_MONGO_URI || 'mongodb://localhost:27017/auth-serverTest',
+      //   },
+      // },
     },
   },
 };

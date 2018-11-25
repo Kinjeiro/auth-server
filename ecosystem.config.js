@@ -38,10 +38,12 @@ const PROD_APP_PATH = process.env.PROD_APP_PATH
 // Your repository
 // const REPO = 'git@gitlab.com:<project_name>.git';
 const REPO = process.env.REPO || packageJson.repository;
+// const DEV_CONTEXT_PATH = process.env.DEV_CONTEXT_PATH;
+// const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : undefined;
 
 const appsOptions = {
-  PORT: 3001,
-  SERVER_PORT: 3001,
+  // PORT,
+  // SERVER_PORT: PORT,
 };
 
 function deployOptions(isProduction = false) {
@@ -68,7 +70,7 @@ function deployOptions(isProduction = false) {
     path: isProduction ? PROD_APP_PATH : DEV_APP_PATH,
     'post-deploy': `\
       npm install\
-      && npm run ${isProduction ? 'build' : 'build-development'}\
+      && npm run ${isProduction ? 'build:production' : 'build:development'}\
       && pm2 startOrRestart ecosystem.config.js ${isProduction ? '--env production' : '--env development'}\
       && pm2 save\
       && sleep 60\
@@ -89,13 +91,20 @@ module.exports = {
       env: {
         ...appsOptions,
         NODE_ENV: 'development',
+        // CONTEXT_PATH: DEV_CONTEXT_PATH === 'false'
+        //   ? undefined
+        //   : DEV_CONTEXT_PATH || appName,
+        CONTEXT_PATH: appName,
+
         APP_MOCKS: 1,
         USE_MOCKS: 1,
-        CONTEXT_PATH: appName,
+
+        ...(process.env.DEV_NODE_ENV_JSON ? JSON.parse(process.env.DEV_NODE_ENV_JSON) : {})
       },
       env_production: {
         ...appsOptions,
         NODE_ENV: 'production',
+        ...(process.env.PROD_NODE_ENV_JSON ? JSON.parse(process.env.PROD_NODE_ENV_JSON) : {})
       },
     }
   ],

@@ -10,11 +10,14 @@
 #   DEV_HOST
 #   DEV_USER
 #   DEV_APP_PATH
+#   DEV_CONTEXT_PATH (по умолчанию appName, если проставить false - его не будет)
+#   DEV_NODE_ENV_JSON - json для доп node env
 #
 #   PROD_PRIVATE_SSH_KEY
 #   PROD_HOST
 #   PROD_USER
 #   PROD_APP_PATH
+#   DEV_NODE_ENV_JSON - json для доп node env
 
 # Достпуны переменные от Gitlab CI
 # $CI_COMMIT_REF_NAME -
@@ -75,7 +78,7 @@ stages:
       echo "==============================="
       echo "========= VARIABLES ==========="
       echo "==============================="
-      echo "REPO: REPO"
+      echo "REPO: $REPO"
       echo "DEPLOY_ENV: $DEPLOY_ENV"
       echo "TARGET_HOST: $TARGET_HOST"
       echo "TARGET_USER: $TARGET_USER"
