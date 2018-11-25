@@ -95,7 +95,6 @@ module.exports = {
         //   ? undefined
         //   : DEV_CONTEXT_PATH || appName,
         CONTEXT_PATH: appName,
-
         APP_MOCKS: 1,
         USE_MOCKS: 1,
 
