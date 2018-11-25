@@ -28,6 +28,7 @@ function removeDir(dirPath) {
 }
 
 module.exports = {
+  ensureDirectoryExistence,
   writeToFile,
-  removeDir
+  removeDir,
 };

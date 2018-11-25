@@ -21,7 +21,7 @@
     "start:daemon:development": "cross-env START_SCRIPT='./dist/server.js' pm2 restart ecosystem.config.js --env development --update-env",
     "start:daemon": "npm run start:daemon:production",
     "stop:daemon": "pm2 stop auth-server || echo 'pm2 app \"auth-server\" not started'",
-    "logs": "pm2 logs auth-server --lines 300",
+    "logs": "pm2 logs $npm_package_name --lines 300",
     "----- START -----": "----------",
     "start:build": "node ./dist/server.js",
     "start:production": "cross-env NODE_ENV=production npm run start-build",

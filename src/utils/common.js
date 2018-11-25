@@ -28,6 +28,10 @@ export function wrapToArray(value = null) {
       : [value];
 }
 
+export function objectValues(object = {}) {
+  return Object.keys(object).map((key) => object[key]);
+}
+
 export function includes(first, second, emptyIsInclude = false, allIncludes = false) {
   const firstA = wrapToArray(first);
   const secondA = wrapToArray(second);
