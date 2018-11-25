@@ -4,6 +4,7 @@
 #// ПЕРЕМЕННЫЕ GITLAB Runner СРЕДЫ
 #// ======================================================
 # 1) публичный ключ от сервера положить в DEPLOYS_KEYS (https://gitlab.com/<your_project>/settings/repository -> DEPLOYS KEYS)
+# Если такой сервер уже был на gitlab - посмотрите там же на закладку: Privately accessible deploy keys 2 и нажмите Enable
 
 # 2) Переменные из VARIABLES (https://gitlab.com/<your_project>/settings/ci_cd -> VARIABLES)
 #   DEV_PRIVATE_SSH_KEY - содержимое приватного ключа сервера
@@ -35,7 +36,9 @@
 # Docker gitlab runner executer
 
 # https://pm2.io/doc/en/runtime/integration/docker/
-image: keymetrics/pm2:latest-alpine
+#image: keymetrics/pm2:latest-alpine
+# Явно зафиксируем версию pm2
+image: keymetrics/pm2:3.2.2
 
 stages:
   - deploy
