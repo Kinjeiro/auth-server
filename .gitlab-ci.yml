@@ -81,15 +81,15 @@ stages:
       echo "========= VARIABLES ==========="
       echo "==============================="
       echo "REPO: $REPO"
-      echo "CI_PROJECT_URL: $CI_PROJECT_URL"
-      echo "CI_REPOSITORY_URL: $CI_REPOSITORY_URL"
       echo "DEPLOY_ENV: $DEPLOY_ENV"
       echo "TARGET_HOST: $TARGET_HOST"
       echo "TARGET_USER: $TARGET_USER"
       echo "TARGET_USER_FINAL: $TARGET_USER_FINAL"
-      echo "TARGET_APP_PATH: $TARGET_APP_PATH"
       echo "TARGET_PRIVATE_SSH_KEY: true"
+
       echo "TARGET_NODE_ENV_JSON: $TARGET_NODE_ENV_JSON"
+      echo "TARGET_APP_PATH: $TARGET_APP_PATH"
+      echo "START_SCRIPT: $START_SCRIPT"
       echo "==============================="
 
 #    ##

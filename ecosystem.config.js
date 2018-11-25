@@ -83,7 +83,7 @@ function deployOptions(isProduction = false) {
       && pm2 startOrRestart ecosystem.config.js ${isProduction ? '--env production' : '--env development'}\
       && pm2 save\
       && sleep 40\
-      && tail --lines 500 $HOME/.pm2/logs/yapomosh-error.log\
+      && tail --lines 500 $HOME/.pm2/logs/${appName}-error.log\
     `,
   };
 }
