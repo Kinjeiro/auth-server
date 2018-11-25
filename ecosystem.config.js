@@ -48,9 +48,6 @@ const REPO = process.env.REPO || packageJson.repository;
 // const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : undefined;
 
 const START_SCRIPT = process.env.START_SCRIPT || './.build/server.js';
-console.warn('ANKU , START_SCRIPT', START_SCRIPT);
-
-console.warn('ANKU , process.env.', process.env);
 
 const appsOptions = {
   // PORT,
@@ -66,7 +63,7 @@ function deployOptions(isProduction = false) {
     //  чтобы подключить к удаленному серверу
     //  */
     // // из .gitlab-ci.yml: в docker gitlab runner сохранияется ключ к dev серверу в файл
-    // key: '~/.ssh/id_rsa',
+    key: '~/.ssh/id_rsa',
     user: isProduction ? PROD_USER : DEV_USER,
     host: isProduction ? PROD_HOST : DEV_HOST,
     ssh_options: ['StrictHostKeyChecking=no', 'PasswordAuthentication=no'],
