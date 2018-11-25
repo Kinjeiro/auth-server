@@ -17,7 +17,7 @@
     "build:development": "cross-env NODE_ENV=development npm run build:inner",
     "test:build": "npm run build && npm run start:build",
     "----- START DAEMON -----": "----------",
-    "start:daemon:production":  "cross-env START_SCRIPT='./dist/server.js' pm2 restart ecosystem.config.js --env production --update-env",
+    "start:daemon:production": "cross-env START_SCRIPT='./dist/server.js' pm2 restart ecosystem.config.js --env production --update-env",
     "start:daemon:development": "cross-env START_SCRIPT='./dist/server.js' pm2 restart ecosystem.config.js --env development --update-env",
     "start:daemon": "npm run start:daemon:production",
     "stop:daemon": "pm2 stop auth-server || echo 'pm2 app \"auth-server\" not started'",
@@ -84,6 +84,7 @@
     "swagger-ui-express": "~3.0.10",
     "validator": "~8.2.0",
     "winston": "~0.8.x",
+    "winston-logstash": "~0.4.0",
     "yamljs": "~0.3.0"
   },
   "devDependencies": {
