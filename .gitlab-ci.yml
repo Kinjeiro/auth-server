@@ -111,6 +111,8 @@ stages:
     ## https://gitlab.com/gitlab-examples/ssh-private-key/issues/1#note_48526556
     ##
     - echo "$TARGET_PRIVATE_SSH_KEY" | tr -d '\r' | ssh-add - > /dev/null
+    - echo "id_rsa Private key"
+    - cat ~/.ssh/id_rsa
 
     ##
     ## Create the SSH directory and give it the right permissions
@@ -145,8 +147,9 @@ stages:
     ## Optionally, if you will be using any Git commands, set the user name and
     ## email.
     ##
-    - git config --global user.email "gitlabCi@reagentum.ru"
-    - git config --global user.name "Reagentum Gitlab CI Executor"
+#    - git config --global user.email "gitlabCi@reagentum.ru"
+#    - git config --global user.name "Reagentum Gitlab CI Executor"
+
 
     ##
     ## Optionally, if you will be using any Git commands, set the user name and
@@ -174,8 +177,8 @@ stages:
   script:
     - echo "====== Deploy to $DEPLOY_ENV server ======"
     - pm2 report
-#    - echo "Setup tagget server directories"
-#    - pm2 deploy ecosystem.config.js $DEPLOY_ENV setup 2>&1 || true
+    - echo "Setup tagget server directories"
+    - pm2 deploy ecosystem.config.js $DEPLOY_ENV setup 2>&1 || true
 
     - echo "make deploy"
     - pm2 deploy ecosystem.config.js $DEPLOY_ENV
@@ -193,8 +196,8 @@ deploy_dev:
     - master
   variables:
     DEPLOY_ENV: "development"
-#    REPO: $CI_PROJECT_URL
-    REPO: $CI_REPOSITORY_URL
+    REPO: $CI_PROJECT_URL
+#    REPO: $CI_REPOSITORY_URL
     TARGET_HOST: $DEV_HOST
     TARGET_PRIVATE_SSH_KEY: $DEV_PRIVATE_SSH_KEY
 #    @BUG_OUT @gitlab - они даже не прикрутили еще дефолтные значения https://gitlab.com/gitlab-org/gitlab-runner/issues/1867

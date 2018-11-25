@@ -37,9 +37,8 @@ const PROD_APP_PATH = process.env.PROD_APP_PATH
 
 // Your repository
 // const REPO = 'git@gitlab.com:<project_name>.git';
-// const REPO = process.env.REPO || packageJson.repository;
-const REPO = 'git@gitlab.com:reagentum/reafront/auth-server-oauth2.git';
-
+const REPO = process.env.REPO || packageJson.repository;
+// const REPO = 'git@gitlab.com:reagentum/reafront/auth-server-oauth2.git';
 // let REPO = process.env.REPO || packageJson.repository;
 // console.warn('ANKU , REPO', REPO);
 // REPO = `git${REPO.substr(REPO.indexOf('@'))}`;
@@ -62,7 +61,7 @@ function deployOptions(isProduction = false) {
     //  чтобы подключить к удаленному серверу
     //  */
     // // из .gitlab-ci.yml: в docker gitlab runner сохранияется ключ к dev серверу в файл
-    // key: '~/.ssh/id_rsa',
+    key: '~/.ssh/id_rsa',
     user: isProduction ? PROD_USER : DEV_USER,
     host: isProduction ? PROD_HOST : DEV_HOST,
     ssh_options: ['StrictHostKeyChecking=no', 'PasswordAuthentication=no'],
