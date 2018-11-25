@@ -94,7 +94,7 @@ function deployOptions(isProduction = false) {
       && npm run ${isProduction ? 'build:production' : 'build:development'}\
       && npm run start:daemon:${isProduction ? 'production' : 'development'}\
       && pm2 save\
-      && echo "wait 40 sec and show logs..."\
+      && echo 'wait 40 sec and show logs...'\
       && sleep 40\
       && tail --lines 500 $HOME/.pm2/logs/${appName.replace(/[@/\\.]/gi, '-')}-error.log\
     `,
