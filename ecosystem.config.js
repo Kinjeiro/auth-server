@@ -37,7 +37,10 @@ const PROD_APP_PATH = process.env.PROD_APP_PATH
 
 // Your repository
 // const REPO = 'git@gitlab.com:<project_name>.git';
-const REPO = process.env.REPO || packageJson.repository;
+let REPO = process.env.REPO || packageJson.repository;
+console.warn('ANKU , REPO', REPO);
+REPO = `git${REPO.substr(REPO.indexOf('@'))}`;
+console.warn('ANKU , REPO 2', REPO);
 // const DEV_CONTEXT_PATH = process.env.DEV_CONTEXT_PATH;
 // const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : undefined;
 
