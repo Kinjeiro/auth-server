@@ -37,7 +37,7 @@ const PROD_APP_PATH = process.env.PROD_APP_PATH
 
 // Your repository
 // const REPO = 'git@gitlab.com:<project_name>.git';
-const REPO = packageJson.repository;
+const REPO = process.env.REPO || packageJson.repository;
 
 const appsOptions = {
   PORT: 3001,

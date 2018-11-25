@@ -75,8 +75,8 @@ stages:
       echo "==============================="
       echo "========= VARIABLES ==========="
       echo "==============================="
+      echo "REPO: REPO"
       echo "DEPLOY_ENV: $DEPLOY_ENV"
-      echo "NODE_ENV: $NODE_ENV"
       echo "TARGET_HOST: $TARGET_HOST"
       echo "TARGET_USER: $TARGET_USER"
       echo "TARGET_USER_FINAL: $TARGET_USER_FINAL"
@@ -184,6 +184,7 @@ deploy_dev:
     - master
   variables:
     DEPLOY_ENV: "development"
+    REPO: $CI_REPOSITORY_URL
     TARGET_HOST: $DEV_HOST
     TARGET_PRIVATE_SSH_KEY: $DEV_PRIVATE_SSH_KEY
 #    @BUG_OUT @gitlab - они даже не прикрутили еще дефолтные значения https://gitlab.com/gitlab-org/gitlab-runner/issues/1867
@@ -208,6 +209,7 @@ deploy_prod:
     - master
   variables:
     DEPLOY_ENV: "production"
+    REPO: $CI_REPOSITORY_URL
     TARGET_HOST: $PROD_HOST
     TARGET_PRIVATE_SSH_KEY: $PROD_PRIVATE_SSH_KEY
     TARGET_USER: $PROD_USER
