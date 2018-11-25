@@ -48,6 +48,7 @@ const REPO = process.env.REPO || packageJson.repository;
 // const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : undefined;
 
 const START_SCRIPT = process.env.START_SCRIPT || './.build/server.js';
+console.warn('ANKU , START_SCRIPT', START_SCRIPT);
 
 const appsOptions = {
   // PORT,
@@ -90,7 +91,7 @@ function deployOptions(isProduction = false) {
     'post-deploy': `\
       npm install --no-save\
       && npm run ${isProduction ? 'build:production' : 'build:development'}\
-      && pm2 startOrRestart ecosystem.config.js ${isProduction ? '--env production' : '--env development'}\
+      && npm run start:daemon:${isProduction ? 'production' : 'development'}\
       && pm2 save\
       && sleep 40\
       && tail --lines 500 $HOME/.pm2/logs/${appName}-error.log\
@@ -116,13 +117,9 @@ module.exports = {
     {
       name: appName,
       script: START_SCRIPT,
-      env: {
+      env_development: {
         ...appsOptions,
         NODE_ENV: 'development',
-        // CONTEXT_PATH: DEV_CONTEXT_PATH === 'false'
-        //   ? undefined
-        //   : DEV_CONTEXT_PATH || appName,
-        // CONTEXT_PATH: appName,
         APP_MOCKS: 1,
         USE_MOCKS: 1,
 
