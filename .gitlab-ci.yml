@@ -12,6 +12,7 @@
 #   DEV_USER
 #   DEV_APP_PATH
 #   DEV_NODE_ENV_JSON - json для доп node env
+#   START_SCRIPT - ./.build/server.js по умолчанию
 #
 #   PROD_PRIVATE_SSH_KEY
 #   PROD_HOST
@@ -227,7 +228,7 @@ deploy_prod:
     - master
   variables:
     DEPLOY_ENV: "production"
-    REPO: $CI_PROJECT_URL
+    REPO: $CI_REPOSITORY_URL
     TARGET_HOST: $PROD_HOST
     TARGET_PRIVATE_SSH_KEY: $PROD_PRIVATE_SSH_KEY
     TARGET_USER: $PROD_USER

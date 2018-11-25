@@ -47,6 +47,8 @@ const REPO = process.env.REPO || packageJson.repository;
 // const DEV_CONTEXT_PATH = process.env.DEV_CONTEXT_PATH;
 // const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : undefined;
 
+const START_SCRIPT = process.env.START_SCRIPT || './.build/server.js';
+
 const appsOptions = {
   // PORT,
   // SERVER_PORT: PORT,
@@ -80,13 +82,22 @@ function deployOptions(isProduction = false) {
       && npm run ${isProduction ? 'build:production' : 'build:development'}\
       && pm2 startOrRestart ecosystem.config.js ${isProduction ? '--env production' : '--env development'}\
       && pm2 save\
-      && sleep 60\
-      && tail --lines 200 $HOME/.pm2/logs/yapomosh-error.log\
+      && sleep 40\
+      && tail --lines 500 $HOME/.pm2/logs/yapomosh-error.log\
     `,
   };
 }
 
 module.exports = {
+  /**
+   * Deployment section
+   * https://pm2.io/doc/en/runtime/guide/easy-deploy-with-ssh/
+   */
+  deploy: {
+    development: deployOptions(),
+    production: deployOptions(true),
+  },
+
   /**
    * Application configuration section
    * http://pm2.keymetrics.io/docs/usage/application-declaration/
@@ -94,7 +105,7 @@ module.exports = {
   apps: [
     {
       name: appName,
-      script: './.build/server.js',
+      script: START_SCRIPT,
       env: {
         ...appsOptions,
         NODE_ENV: 'development',
@@ -113,14 +124,5 @@ module.exports = {
         ...(process.env.PROD_NODE_ENV_JSON ? JSON.parse(process.env.PROD_NODE_ENV_JSON) : {})
       },
     }
-  ],
-
-  /**
-   * Deployment section
-   * https://pm2.io/doc/en/runtime/guide/easy-deploy-with-ssh/
-   */
-  deploy: {
-    development: deployOptions(),
-    production: deployOptions(true),
-  }
+  ]
 };
