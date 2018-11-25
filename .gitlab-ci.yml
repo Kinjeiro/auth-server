@@ -175,6 +175,13 @@ stages:
     - echo "====== Deploy to $DEPLOY_ENV server ======"
     - pm2 report
 
+    # // todo @ANKU @LOW - @BUG_OUT @GITLAB - у нас два обращение от private server to gitlab repo - здесь используются token keys
+    # но при ошибки pm2 setup (так как директория уже существует в следующий раз) второй раз при деплои токен уже был недействителен
+    # и падала ошибка:
+    #   remote: HTTP Basic: Access denied
+    #   fatal: Authentication failed for 'https://gitlab-ci-token:8p4t-abFSKvu691gZ6UL@gitlab.com/reagentum/reafront/auth-server-oauth2.git/'
+    # выход из этой ситуации чтобы setup отрападывал без ошибок, поэтому добавили чтобы перед сетапом pm2 всегда очищал папку
+    # pm2 ecosystem.config.js: 'pre-setup': `rm -rf ${APP_PATH}`,
     - echo "Setup tagget server directories"
     - pm2 deploy ecosystem.config.js $DEPLOY_ENV setup 2>&1 || true
 

@@ -65,7 +65,11 @@ function deployOptions(isProduction = false) {
     //  чтобы подключить к удаленному серверу
     //  */
     // // из .gitlab-ci.yml: в docker gitlab runner сохранияется ключ к dev серверу в файл
+    // !!! если репозиторий private - необходимо на удаленном сервере иметь public ключ для этого хранилища - хорошо бы этого избежать
+    // хорошо бы этот ключ заранее передавать либо сделать один ключ на сервер и на gitlab и использовать ForwardAgent=yes
     // key: '~/.ssh/id_rsa',
+    // но мы используем GITLAB DEPLOY KEYS
+
     user: isProduction ? PROD_USER : DEV_USER,
     host: isProduction ? PROD_HOST : DEV_HOST,
     ssh_options: ['StrictHostKeyChecking=no', 'PasswordAuthentication=no'],
@@ -73,15 +77,17 @@ function deployOptions(isProduction = false) {
     // скачать на удаленном сервере репозиторий
     ref: 'origin/master',
     repo: REPO,
-    // todo @ANKU @LOW - !!! если репозиторий private - необходимо на удаленном сервере иметь public ключ для этого хранилища - хорошо бы этого избежать
-    // todo @ANKU @LOW - хорошо бы этот ключ заранее передавать либо сделать один ключ на сервер и на gitlab и использовать ForwardAgent=yes
 
     // установить на удаленном сервере последнюю версию приложения
     path: APP_PATH,
 
-    // 'pre-setup': "apt-get install git ; ls -la",
-    // todo @ANKU @CRIT @MAIN @debugger - пробуем чтобы setup исполнялся правильно
-    // todo @ANKU @CRIT @MAIN @debugger - тут безопасность нужно проверять путь, а то весь сервер можно удалить
+    // todo @ANKU @LOW - @BUG_OUT @GITLAB - у нас два обращение от private server to gitlab repo - здесь используются token keys
+    // но при ошибки pm2 setup (так как директория уже существует в следующий раз) второй раз при деплои токен уже был недействителен
+    // и падала ошибка:
+    //    remote: HTTP Basic: Access denied
+    //    fatal: Authentication failed for 'https://gitlab-ci-token:8p4t-abFSKvu691gZ6UL@gitlab.com/reagentum/reafront/auth-server-oauth2.git/'
+    // выход из этой ситуации чтобы setup отрападывал без ошибок, поэтому добавили чтобы перед сетапом pm2 всегда очищал папку
+    // pm2 ecosystem.config.js: 'pre-setup': `rm -rf ${APP_PATH}`,
     'pre-setup': `rm -rf ${APP_PATH}`,
     // 'post-setup': "apt-get install git ; ls -la",
     // 'pre-deploy-local': `\
@@ -93,8 +99,9 @@ function deployOptions(isProduction = false) {
       && npm run ${isProduction ? 'build:production' : 'build:development'}\
       && npm run start:daemon:${isProduction ? 'production' : 'development'}\
       && pm2 save\
+      && echo "wait 40 sec and show logs..."\
       && sleep 40\
-      && tail --lines 500 $HOME/.pm2/logs/${appName}-error.log\
+      && tail --lines 500 $HOME/.pm2/logs/${appName.replace(/[@/\\.]/gi, '-')}-error.log\
     `,
   };
 }
