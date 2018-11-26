@@ -11,11 +11,13 @@
 #   DEV_HOST
 #   DEV_USER
 #   DEV_APP_PATH
+#   DEV_START_NODE_ENV_JSON
 #
 #   PROD_PRIVATE_SSH_KEY
 #   PROD_HOST
 #   PROD_USER
 #   PROD_APP_PATH
+#   PROD_START_NODE_ENV_JSON
 
 # Достпуны переменные от Gitlab CI - https://docs.gitlab.com/ee/ci/variables/#predefined-variables-environment-variables
 # $CI_COMMIT_REF_NAME -
@@ -111,10 +113,6 @@ stages:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
 
-#    // todo @ANKU @CRIT @MAIN @debugger -
-#    - echo "$TARGET_PRIVATE_SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-#    - chmod 700 ~/.ssh && chmod 600 ~/.ssh/*
-
     ##
     ## Use ssh-keyscan to scan the keys of your private server. Replace gitlab.com
     ## with your own domain name. You can copy and repeat that command if you have
@@ -154,8 +152,6 @@ stages:
     # try to connect to GitLab.com
     - echo "Test Git connection"
     - ssh -T git@gitlab.com
-    # try to clone yourself. A *PUBLIC* key paired to the DEV_PRIVATE_SSH_KEY was added as deploy key to this repository
-#    - git clone git@gitlab.com:gitlab-examples/ssh-private-key.git
 
     # try test ssh connection
     - echo "Test ssh connection" $TARGET_USER_FINAL $TARGET_HOST
@@ -203,7 +199,7 @@ deploy_dev:
     REPO: $CI_REPOSITORY_URL
     TARGET_HOST: $DEV_HOST
     TARGET_PRIVATE_SSH_KEY: $DEV_PRIVATE_SSH_KEY
-#    @BUG_OUT @gitlab - они даже не прикрутили еще дефолтные значения https://gitlab.com/gitlab-org/gitlab-runner/issues/1867
+#    // todo @ANKU @LOW @BUG_OUT @gitlab - они даже не прикрутили еще дефолтные значения https://gitlab.com/gitlab-org/gitlab-runner/issues/1867
 #    TARGET_USER: ${DEV_USER:-root}
     TARGET_USER: $DEV_USER
     TARGET_APP_PATH: $DEV_APP_PATH
@@ -243,6 +239,8 @@ deploy_prod:
 #    - ssh -o StrictHostKeyChecking=no "$TARGET_SERVER_USER@$TARGET_SERVER_HOST" 'rm -rf /home/your_app_name'
 #    - scp -P22 -r . "$TARGET_SERVER_USER@$TARGET_SERVER_HOST":/home/your_app_name
 
+#    - echo "$TARGET_PRIVATE_SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+#    - chmod 700 ~/.ssh && chmod 600 ~/.ssh/*
 
 # Shell gitlab runner executer
 #echo "Setup tagget server directories"

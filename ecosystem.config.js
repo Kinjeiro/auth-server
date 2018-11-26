@@ -51,6 +51,20 @@ const START_SCRIPT = process.env.START_SCRIPT || './.build/server.js';
 
 function deployOptions(isProduction = false) {
   const APP_PATH = isProduction ? PROD_APP_PATH : DEV_APP_PATH;
+  let START_NODE_ENV_OBJECT = isProduction ? process.env.PROD_START_NODE_ENV_JSON : process.env.DEV_START_NODE_ENV_JSON;
+  if (START_NODE_ENV_OBJECT) {
+    START_NODE_ENV_OBJECT = JSON.parse(START_NODE_ENV_OBJECT);
+  }
+
+  const START_NODE_ENV_STR = START_NODE_ENV_OBJECT && Object.keys(START_NODE_ENV_OBJECT).length > 0
+    ? Object.keys(START_NODE_ENV_OBJECT).reduce(
+      (result, envKey) => `${result} "${envKey}"="${START_NODE_ENV_OBJECT[envKey]}"`,
+      ' cross-env ',
+    )
+    : '';
+
+  console.warn('ANKU , START_NODE_ENV_STR', START_NODE_ENV_STR);
+
   return {
     // мы кладем ключ в DEPLOY KEYS в gitlab CI
     // /*
@@ -90,9 +104,10 @@ function deployOptions(isProduction = false) {
     //   mkdir -p ${APP_PATH}\
     // `,
     'post-deploy': `\
-      npm install --no-save\
+      npm install -g cross-env
+      && npm install --no-save\
       && npm run ${isProduction ? 'build:production' : 'build:development'}\
-      && npm run start:daemon:${isProduction ? 'production' : 'development'}\
+      && ${START_NODE_ENV_STR} npm run start:daemon:${isProduction ? 'production' : 'development'}\
       && pm2 save\
       && echo 'wait 40 sec and show logs...'\
       && sleep 40\
