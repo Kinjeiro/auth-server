@@ -14,12 +14,11 @@ const contextPathStr = config.common.app.contextPath
 export default function applyRoutes(expressApp) {
   expressApp.use(`${contextPathStr}${apiPrefixStr}/health`, health);
   expressApp.use(`${contextPathStr}${apiPrefixStr}/auth`, auth);
+  expressApp.use(`${contextPathStr}${apiPrefixStr}/users`, users);
 
   // todo @ANKU @LOW - If you want to set up routing based on the swagger document checkout swagger-express-router
   // но он не использует swagger-ui
   // apiDocs(expressApp, `${contextPathStr}/api-docs`);
   apiDocs(expressApp, contextPathStr);
   // expressApp.use('/api-docs', apiDocs(expressApp));
-
-  expressApp.use(`${contextPathStr}${apiPrefixStr}/users`, users);
 }
