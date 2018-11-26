@@ -58,7 +58,7 @@ function deployOptions(isProduction = false) {
 
   const START_NODE_ENV_STR = START_NODE_ENV_OBJECT && Object.keys(START_NODE_ENV_OBJECT).length > 0
     ? Object.keys(START_NODE_ENV_OBJECT).reduce(
-      (result, envKey) => `${result} "${envKey}"="${START_NODE_ENV_OBJECT[envKey]}"`,
+      (result, envKey) => `${result} '${envKey}'='${START_NODE_ENV_OBJECT[envKey]}'`,
       ' cross-env ',
     )
     : '';
