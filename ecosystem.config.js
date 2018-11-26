@@ -104,7 +104,7 @@ function deployOptions(isProduction = false) {
     //   mkdir -p ${APP_PATH}\
     // `,
     'post-deploy': `\
-      npm install -g cross-env
+      npm install -g cross-env\
       && npm install --no-save\
       && npm run ${isProduction ? 'build:production' : 'build:development'}\
       && ${START_NODE_ENV_STR} npm run start:daemon:${isProduction ? 'production' : 'development'}\
