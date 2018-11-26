@@ -93,7 +93,7 @@ export async function connect(
     ...connectionOptions,
   };
 
-  logger.debug('Mongo connect to', dbUri, connectionOptionsFinal);
+  logger.debug('Mongo connect to', dbUri, { ...connectionOptionsFinal, pass: '****' });
   await mongoose.connect(
     dbUri,
     connectionOptionsFinal,
@@ -145,7 +145,9 @@ async function connectionWrapper(db, executeFn, options = {}) {
     if (disconnect) {
       // не нужно включать в общую цепочку promise - так как пользователю можно вернуть результат раньше, нежели закроется коннекшен
       setTimeout(async () => {
-        await dbFinal.disconnect();
+        if (dbFinal) {
+          await dbFinal.disconnect();
+        }
         logger.info('Disconnected from DB');
       }, 3000);
     }

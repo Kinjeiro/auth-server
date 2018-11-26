@@ -34,7 +34,7 @@
 # Docker gitlab runner executer
 
 # https://pm2.io/doc/en/runtime/integration/docker/
-#image: keymetrics/pm2:3.2.2
+#image: keymetrics/pm2:3.2.2 - у них нет версий, только latest
 image: keymetrics/pm2:latest-alpine
 
 stages:
@@ -70,8 +70,6 @@ stages:
 # важно поменить точкой впереди, чтобы gitlab yamp не воспринимал его как блок
 .deploy_ssh_key: &deploy_ssh_key
   before_script:
-    - TARGET_USER_FINAL="${TARGET_USER:-root}"
-
     # символ ":" является оператором в yaml и чтобы его заэкранировать нужно писать множественные строки через |-
     - |-
       echo "==============================="
