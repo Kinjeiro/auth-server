@@ -7,8 +7,8 @@ const {
   // EMAIL_AS_LOGIN,
 } = process.env;
 
-const projectId = PROJECT_ID || 'mockServer';
-const useMock = !!USE_MOCK || NODE_ENV === 'test';
+export const projectId = PROJECT_ID || 'mockServer';
+export const useMock = !!USE_MOCK || NODE_ENV === 'test';
 
 export const CLIENTS = {
   [projectId]: {
@@ -24,47 +24,6 @@ export const CLIENTS = {
 };
 
 export const USERS = {
-  ivanovI: {
-    // username: EMAIL_AS_LOGIN ? 'ivanovI@local.com' : 'ivanovI',
-    username: 'ivanovI',
-    password: '123456',
-
-    displayName: 'Ivanov I. I.',
-    firstName: 'Ivan',
-    middleName: 'Ivanovich',
-    lastName: 'Ivanov',
-    email: 'ivanovI@local.com',
-    // todo @ANKU @LOW - profileImageURI
-
-    // есть значение по умолчанию
-    // roles: [],
-    // permissions: [],
-
-    provider: 'local',
-    projectId: CLIENTS[projectId].clientId,
-  },
-  korolevaU: {
-    // username: EMAIL_AS_LOGIN ? 'korolevaU@local.com' : 'korolevaU',
-    username: 'korolevaU',
-    password: '123456',
-
-    displayName: 'Koroleva U. A.',
-    firstName: 'Uliya',
-    middleName: 'Alexsandrovna',
-    lastName: 'Koroleva',
-    email: 'korolevaU@local.com',
-
-    roles: [
-      'user',
-      'testRole',
-    ],
-    permissions: [
-      'TEST_PERMISSION',
-    ],
-
-    provider: 'local',
-    projectId: CLIENTS[projectId].clientId,
-  },
   [projectId]: {
     username: 'protector',
     password: `${projectId}${projectId}`,
@@ -88,7 +47,48 @@ export const USERS = {
   },
 };
 
+if (useMock) {
+  USERS.ivanovI = {
+    // username: EMAIL_AS_LOGIN ? 'ivanovI@local.com' : 'ivanovI',
+    username: 'ivanovI',
+    password: '123456',
+
+    displayName: 'Ivanov I. I.',
+    firstName: 'Ivan',
+    middleName: 'Ivanovich',
+    lastName: 'Ivanov',
+    email: 'ivanovI@local.com',
+
+    // есть значение по умолчанию
+    roles: ['user'],
+    permissions: ['TEST_PERMISSION'],
+
+    projectId: CLIENTS[projectId].clientId,
+  };
+  USERS.korolevaU = {
+    // username: EMAIL_AS_LOGIN ? 'korolevaU@local.com' : 'korolevaU',
+    username: 'korolevaU',
+    password: '123456',
+
+    displayName: 'Koroleva U. A.',
+    firstName: 'Uliya',
+    middleName: 'Alexsandrovna',
+    lastName: 'Koroleva',
+    email: 'korolevaU@local.com',
+
+    roles: [
+      'user',
+      'admin',
+    ],
+    permissions: [
+      'TEST_PERMISSION',
+    ],
+
+    projectId: CLIENTS[projectId].clientId,
+  };
+}
+
 export default {
   CLIENTS,
-  USERS: useMock ? USERS : {},
+  USERS,
 };
