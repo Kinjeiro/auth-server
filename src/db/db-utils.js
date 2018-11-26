@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import muri from 'muri';
 
 import config from '../config';
+import { promiseMap } from '../utils/common';
 import logger from '../helpers/logger';
 
 // Set mongoose.Promise to any Promise implementation
@@ -129,13 +130,14 @@ async function connectionWrapper(db, executeFn, options = {}) {
   } = options;
 
   let dbFinal = db;
+  let result = null;
 
   try {
     if (!dbFinal || typeof dbFinal === 'string') {
       dbFinal = await connect(typeof dbFinal === 'string' ? dbFinal : undefined);
     }
 
-    await executeFn(dbFinal.connection);
+    result = await executeFn(dbFinal.connection);
 
   } catch (error) {
     logger.error(error);
@@ -148,6 +150,7 @@ async function connectionWrapper(db, executeFn, options = {}) {
       }, 3000);
     }
   }
+  return result;
 }
 
 /*
@@ -162,6 +165,7 @@ export async function fillDataBase(
     dropCollection = false,
     dropOther = false,
     disconnect = false,
+    ignoreError = false,
   } = options;
 
   logger.debug('fillDataBase');
@@ -171,28 +175,39 @@ export async function fillDataBase(
     (connection) => {
       const { models } = connection;
 
-      return Promise.all(Object.keys(models).map(async (modelName) => {
-        const Model = models[modelName];
-        const entitiesAttributes = modelToEntitiesMap[modelName];
-        const hasInfo = !!entitiesAttributes;
-        const { collectionName } = Model.collection;
+      return promiseMap(
+        models,
+        async (modelName, Model) => {
+          try {
+            const entitiesAttributes = modelToEntitiesMap[modelName];
+            const hasInfo = !!entitiesAttributes;
+            const { collectionName } = Model.collection;
 
-        if (hasInfo) {
-          if (dropCollection) {
-            await clearCollection(Model);
-          }
+            if (hasInfo) {
+              if (dropCollection) {
+                await clearCollection(Model);
+              }
 
-          if (entitiesAttributes.length) {
-            // через Model чтобы была валидация полей
-            // const count = await collection.insertMany(entitiesAttributes);
-            const docs = await Model.insertMany(entitiesAttributes);
-            const docIds = docs.map(({ id }) => id);
-            logger.info(`Insert ${docIds.length} documents into "${collectionName}" collection: \n`, docIds.join(', '));
+              if (entitiesAttributes.length) {
+                // через Model чтобы была валидация полей
+                // const count = await collection.insertMany(entitiesAttributes);
+                const docs = await Model.insertMany(entitiesAttributes);
+                const docIds = docs.map(({ id }) => id);
+                logger.info(`Insert ${docIds.length} documents into "${collectionName}" collection: \n`, docIds.join(', '));
+                return docs;
+              }
+            } else if (dropOther) {
+              await clearCollection(Model);
+            }
+          } catch (error) {
+            logger.error(error);
+            if (!ignoreError) {
+              throw error;
+            }
           }
-        } else if (dropOther) {
-          await clearCollection(Model);
-        }
-      }));
+          return [];
+        },
+      );
     },
     {
       disconnect,

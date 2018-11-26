@@ -202,6 +202,7 @@ export const UserSchema = new mongoose.Schema({
   // ======================================================
   provider: {
     type: String,
+    default: 'local',
     required: 'Provider is required',
   },
   providerScopes: {

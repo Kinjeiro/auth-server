@@ -96,3 +96,23 @@ export function errorToJson(error) {
 
   return error;
 }
+
+/**
+ *
+ * @param nameToPromiseMap
+ * @param valueFunc - (key, value) => result value or promise
+ * @return {Promise.<TResult>}
+ */
+export function promiseMap(nameToPromiseMap, valueFunc = null) {
+  const keys = Object.keys(nameToPromiseMap);
+  return Promise.all(keys.map((key) => (
+    valueFunc
+      ? valueFunc(key, nameToPromiseMap[key])
+      : nameToPromiseMap[key]
+  )))
+    .then((results) => keys.reduce((resultMap, key, index) => {
+      // eslint-disable-next-line no-param-reassign
+      resultMap[key] = results[index];
+      return resultMap;
+    }, {}));
+}
