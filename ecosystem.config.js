@@ -58,12 +58,18 @@ function deployOptions(isProduction = false) {
 
   const START_NODE_ENV_STR = START_NODE_ENV_OBJECT && Object.keys(START_NODE_ENV_OBJECT).length > 0
     ? Object.keys(START_NODE_ENV_OBJECT).reduce(
-      (result, envKey) => `${result} '${envKey}'='${START_NODE_ENV_OBJECT[envKey]}'`,
+      (result, envKey) => {
+        let value = START_NODE_ENV_OBJECT[envKey];
+        if (typeof value !== 'number') {
+          value = `'${value}'`;
+        }
+        return `${result} '${envKey}'=${value}`;
+      },
       ' cross-env ',
     )
     : '';
 
-  console.warn('ANKU , START_NODE_ENV_STR', START_NODE_ENV_STR);
+  console.log('START_NODE_ENV_STR', START_NODE_ENV_STR);
 
   return {
     // мы кладем ключ в DEPLOY KEYS в gitlab CI
