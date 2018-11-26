@@ -2,6 +2,7 @@
 const packageJson = require('./package.json');
 
 const appName = packageJson.name;
+const appVersion = packageJson.version;
 
 const DEFAULT_USER = 'root';
 function defaultAppPath(user) {
@@ -50,6 +51,12 @@ const REPO = process.env.REPO || packageJson.repository;
 const START_SCRIPT = process.env.START_SCRIPT || './.build/server.js';
 
 function deployOptions(isProduction = false) {
+  console.log(`
+    // ======================================================\
+    // ${appName}@${appVersion}\
+    // ======================================================\
+  `);
+
   const APP_PATH = isProduction ? PROD_APP_PATH : DEV_APP_PATH;
   let START_NODE_ENV_OBJECT = isProduction ? process.env.PROD_START_NODE_ENV_JSON : process.env.DEV_START_NODE_ENV_JSON;
   if (START_NODE_ENV_OBJECT) {

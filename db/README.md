@@ -109,11 +109,11 @@ mongo localhost:27017/admin --eval "db.createUser({user: 'superAdmin', pwd: 'SEC
 
 создания admin для проекта
 ```
-mongo localhost:27017/admin -u "superAdmin" -p "SECRET" --authenticationDatabase "admin" --eval "db.createUser({user: '<your_project>Admin', pwd: '<secret>',roles: [{ role: 'dbOwner', db: '<your_project>' },{ role: 'dbOwner', db: '<your_project>Test' }]});"
+mongo localhost:27017/admin -u "superAdmin" -p "SECRET" --authenticationDatabase "admin" --eval "db.createUser({user: '<your_project>Admin', pwd: '<secret>', roles: [{ role: 'dbOwner', db: '<your_project>' },{ role: 'dbOwner', db: '<your_project>Test' }]});"
 ```
 (в случае с auth-server:)
 ```
-mongo localhost:27017/admin -u "superAdmin" -p "SECRET" --authenticationDatabase "admin" --eval "db.createUser({user: 'authServerUser', pwd: 'authAuth',roles: [{ role: 'dbOwner', db: 'auth-server' },{ role: 'dbOwner', db: 'auth-serverTest' }]});"
+mongo localhost:27017/admin -u "superAdmin" -p "SECRET" --authenticationDatabase "admin" --eval "db.createUser({user: 'authServerUser', pwd: 'authAuth', roles: [{ role: 'dbOwner', db: 'auth-server' },{ role: 'dbOwner', db: 'auth-serverTest' }]});"
 ```
 
 ### Открываем порты
@@ -175,4 +175,9 @@ mongo dev.reagentum.ru:27017/admin -u superAdmin -p SECRET_PASSWORD --authentica
 superAdmin \ SECRET
 database: admin
 Auth. mecanism: SCRAM-SHA-1
+```
+
+### Создаем пользователей для проекта
+```
+cross-env PROJECT_ID=myProject USE_MOCK=1 NODE_ENV=development npm run mongo:fill
 ```
