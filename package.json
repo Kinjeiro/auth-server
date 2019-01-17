@@ -76,6 +76,7 @@
     "nodemailer": "~4.6.7",
     "oauth2orize": "~1.0.x",
     "passport": "~0.2.x",
+    "passport-google-oauth20": "~1.0.0",
     "passport-http": "~0.2.x",
     "passport-http-bearer": "~1.0.x",
     "passport-strategy": "1.x.x",

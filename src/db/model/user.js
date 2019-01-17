@@ -271,10 +271,13 @@ UserSchema.virtual('computedDisplayName')
 // METHODS
 // ======================================================
 UserSchema.methods.encryptPassword = function (password) {
-  return crypto.createHmac('sha1', this.salt)
-    .update(password)
-    .digest('hex');
-  // более секьюрно - return crypto.pbkdf2Sync(password, this.salt, 10000, 512).toString('hex');
+  if (password) {
+    return crypto.createHmac('sha1', this.salt)
+      .update(password)
+      .digest('hex');
+    // более секьюрно - return crypto.pbkdf2Sync(password, this.salt, 10000, 512).toString('hex');
+  }
+  return null;
 };
 
 UserSchema.methods.checkPassword = function (password) {

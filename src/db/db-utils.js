@@ -80,9 +80,10 @@ export async function connect(
   if (hasCredentials) {
     logger.info('Mongo authenticated: ', user);
     credentialsOptions = {
-      user,
-      pass: password,
-      authSource: 'admin',
+      // TODO: расскоментить
+      // user,
+      // pass: password,
+      // authSource: 'admin',
       authMechanism: 'SCRAM-SHA-1',
     };
   }

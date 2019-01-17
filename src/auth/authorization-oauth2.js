@@ -59,41 +59,38 @@ export const GRANT_TYPE__PASSWORD = 'password';
 // Exchange username & password for access tokenMiddlewares.
 authServer.exchange(
   // \node_modules\oauth2orize\lib\exchange\password.js
-  oauth2orize.exchange.password(
-    async (client, identifier, password, scope, done) => {
-      try {
-        const projectId = client.clientId || getProjectIdFromScope(scope);
-        logger.info(`(Authorization)[Client "${client.clientId}"] generate access_token for user "${identifier}" [${projectId}]`);
+  oauth2orize.exchange.password(async (client, identifier, password, scope, done) => {
+    try {
+      const projectId = client.clientId || getProjectIdFromScope(scope);
+      logger.info(`(Authorization)[Client "${client.clientId}"] generate access_token for user "${identifier}" [${projectId}]`);
 
-        /**
+      /**
          * авторизоваться может с помощью userId \ username \ email
          */
-        const user = await findUserByIdentify(projectId, identifier, password);
-        if (!user) {
-          return done(null, false);
-        }
-        const tokenData = {
-          userId: user.userId,
-          clientId: client.clientId,
-        };
-
-        const {
-          accessTokenValue,
-          refreshTokenValue,
-          expiresIn,
-          expiresInDate,
-        } = await generateTokens(tokenData);
-
-        return done(null, accessTokenValue, refreshTokenValue, {
-          expires_in: expiresIn,
-          expires_in_date: expiresInDate,
-        });
-      } catch (error) {
-        return done(error);
+      const user = await findUserByIdentify(projectId, identifier, password);
+      if (!user) {
+        return done(null, false);
       }
-    },
-  ),
-);
+      const tokenData = {
+        userId: user.userId,
+        clientId: client.clientId,
+      };
+
+      const {
+        accessTokenValue,
+        refreshTokenValue,
+        expiresIn,
+        expiresInDate,
+      } = await generateTokens(tokenData);
+
+      return done(null, accessTokenValue, refreshTokenValue, {
+        expires_in: expiresIn,
+        expires_in_date: expiresInDate,
+      });
+    } catch (error) {
+      return done(error);
+    }
+  }));
 
 
 // ======================================================
@@ -103,66 +100,63 @@ export const GRANT_TYPE__REFRESH_TOKEN = 'refresh_token';
 // (Exchange refreshToken for access tokenMiddlewares)
 authServer.exchange(
   // \node_modules\oauth2orize\lib\exchange\refreshToken.js
-  oauth2orize.exchange.refreshToken(
-    (client, refreshToken, scope, done) => {
-      logger.info(`(Authorization)[Client "${client.clientId}"] Refresh token`);
-      RefreshToken.findOne(
-        {
-          token: refreshToken,
-          clientId: client.clientId,
-        },
-        async (err, token) => {
-          if (err) {
-            return done(err);
-          }
+  oauth2orize.exchange.refreshToken((client, refreshToken, scope, done) => {
+    logger.info(`(Authorization)[Client "${client.clientId}"] Refresh token`);
+    RefreshToken.findOne(
+      {
+        token: refreshToken,
+        clientId: client.clientId,
+      },
+      async (err, token) => {
+        if (err) {
+          return done(err);
+        }
 
-          if (!token) {
-            return done(null, false);
-          }
+        if (!token) {
+          return done(null, false);
+        }
 
-          const {
-            userId,
-            expiresInDate,
-          } = token;
+        const {
+          userId,
+          expiresInDate,
+        } = token;
 
-          if (Date.now() > expiresInDate.getTime()) {
-            logger.info(`-- refresh token for userId "${userId}" expired. Remove refresh token`);
+        if (Date.now() > expiresInDate.getTime()) {
+          logger.info(`-- refresh token for userId "${userId}" expired. Remove refresh token`);
 
-            RefreshToken.remove({ token: refreshToken }, (error) => {
-              if (error) {
-                return done(error);
-              }
-              return done(null, false, { message: 'Refresh token expired' });
-            });
-          } else {
-            try {
-              const user = await findUserById(userId);
-              logger.info(`--refresh token for user "${user.username}"`);
-              const tokenData = {
-                userId,
-                clientId: client.clientId,
-              };
-
-              const {
-                accessTokenValue,
-                refreshTokenValue,
-                expiresIn: expiresInNew,
-                expiresInDate: expiresInDateNew,
-              } = await generateTokens(tokenData);
-
-              return done(null, accessTokenValue, refreshTokenValue, {
-                expires_in: expiresInNew,
-                expires_in_date: expiresInDateNew,
-              });
-            } catch (error) {
+          RefreshToken.remove({ token: refreshToken }, (error) => {
+            if (error) {
               return done(error);
             }
+            return done(null, false, { message: 'Refresh token expired' });
+          });
+        } else {
+          try {
+            const user = await findUserById(userId);
+            logger.info(`--refresh token for user "${user.username}"`);
+            const tokenData = {
+              userId,
+              clientId: client.clientId,
+            };
+
+            const {
+              accessTokenValue,
+              refreshTokenValue,
+              expiresIn: expiresInNew,
+              expiresInDate: expiresInDateNew,
+            } = await generateTokens(tokenData);
+
+            return done(null, accessTokenValue, refreshTokenValue, {
+              expires_in: expiresInNew,
+              expires_in_date: expiresInDateNew,
+            });
+          } catch (error) {
+            return done(error);
           }
-        },
-      );
-    },
-  ),
-);
+        }
+      },
+    );
+  }));
 
 export const GRANT_TYPE_PARAM_VALUES = {
   password: GRANT_TYPE__PASSWORD,

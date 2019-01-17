@@ -11,7 +11,11 @@ import { getProjectId } from '../../helpers/request-data';
 import ValidationError from '../../models/errors/ValidationError';
 import { OMIT_USER_ATTRS } from '../../db/model/user';
 
-import { middlewareClientPasswordStrategy } from '../../auth/authenticate-passport';
+import {
+  middlewareClientPasswordStrategy,
+  middlewareGoogleStrategy,
+  middlewareGoogleCallbackStrategy,
+} from '../../auth/authenticate-passport';
 import oauth2TokenMiddlewares from '../../auth/authorization-oauth2';
 import {
   signUp,
@@ -19,6 +23,7 @@ import {
   createResetPasswordToken,
   resetPassword,
   findUserByEmail,
+  findUserById,
 } from '../../services/service-auth';
 
 const hbsMailSignup = getHandlebarsTemplate(path.resolve(__dirname, './mail-signup.hbs'));
@@ -26,10 +31,7 @@ const hbsMailResetPassword = getHandlebarsTemplate(path.resolve(__dirname, './ma
 const hbsMailResetPasswordSuccess = getHandlebarsTemplate(path.resolve(__dirname, './mail-reset-password-success.hbs'));
 
 function getEmailHtml(emailOptions, defaultHbsTemplate, contextData = {}) {
-  const {
-    html,
-    text,
-  } = emailOptions || {};
+  const { html, text } = emailOptions || {};
   return text
     ? null
     : html
@@ -48,11 +50,7 @@ const router = createRoute(
     // создаем пользователя
     async (req, res) => {
       const {
-        body: {
-          client_id,
-          userData,
-          emailOptions,
-        },
+        body: { client_id, userData, emailOptions },
       } = req;
       try {
         const user = await signUp(userData, client_id, getProjectId(req));
@@ -93,15 +91,11 @@ const router = createRoute(
 /**
  * @see - \src\api\swagger.yaml
  */
-createRoute(
-  '/signin',
-  oauth2TokenMiddlewares,
-  {
-    method: 'post',
-    auth: false,
-    router,
-  },
-);
+createRoute('/signin', oauth2TokenMiddlewares, {
+  method: 'post',
+  auth: false,
+  router,
+});
 
 /**
  * @see - \src\api\swagger.yaml
@@ -111,10 +105,7 @@ createRoute(
   (req, res) => {
     // See \src\auth\authenticate-passport.js
     // Req.user and req.authInfo are set using the `info` argument supplied by `BearerStrategy`.
-    const {
-      user,
-      authInfo,
-    } = req;
+    const { user, authInfo } = req;
 
     res.json({
       ...omit(user, OMIT_USER_ATTRS),
@@ -133,9 +124,7 @@ createRoute(
   '/signout',
   async (req, res) => {
     const {
-      user: {
-        userId,
-      },
+      user: { userId },
     } = req;
 
     return res.json(await signOut(userId));
@@ -144,7 +133,6 @@ createRoute(
     router,
   },
 );
-
 
 export const PARAM__RESET_PASSWORD_TOKEN = 'resetToken';
 /**
@@ -179,14 +167,10 @@ createRoute(
         await sendMail(
           email,
           emailOptions.subject || 'Сброс пароля',
-          getEmailHtml(
-            emailOptions,
-            hbsMailResetPassword,
-            {
-              ...user,
-              URL: fullResetPasswordPageUrl,
-            },
-          ),
+          getEmailHtml(emailOptions, hbsMailResetPassword, {
+            ...user,
+            URL: fullResetPasswordPageUrl,
+          }),
           emailOptions,
         );
       }
@@ -211,11 +195,7 @@ createRoute(
     middlewareClientPasswordStrategy,
     async (req, res) => {
       const {
-        body: {
-          resetPasswordToken,
-          newPassword,
-          emailOptions = {},
-        },
+        body: { resetPasswordToken, newPassword, emailOptions = {} },
       } = req;
 
       const user = await resetPassword(resetPasswordToken, newPassword);
@@ -240,6 +220,63 @@ createRoute(
   ],
   {
     method: 'post',
+    router,
+    auth: false,
+  },
+);
+// для теста
+let pageToRedirect;
+
+createRoute(
+  '/google',
+  [
+    async (req, res, next) => {
+      const url = req.get('referer');
+      pageToRedirect = url;
+      next(null, { pageToRedirect });
+    },
+    middlewareGoogleStrategy,
+  ],
+  {
+    method: 'get',
+    router,
+    auth: false,
+  },
+);
+
+createRoute(
+  '/google/callback',
+  [
+    middlewareGoogleCallbackStrategy,
+    async (req, res, next) => {
+      // TODO: сделать сериализатор для всех соцсетей
+      const serializedUser = {
+        username: req.user.id,
+        userId: req.user.id,
+        email: req.user.emails[0].value,
+        displayName: req.user.displayName,
+        firstName: req.user.name.givenName,
+        lastName: req.user.name.familyName,
+        // TODO: конвертить в base 64
+        // profileImageURI: req.user.photos[0] ? req.user.photos[0].value : null,
+        provider: req.user.provider,
+        providerData: {
+          accessToken: req.user.accessToken,
+          refreshToken: req.user.refreshToken,
+        },
+      };
+      const user = await findUserById(serializedUser.id, null, true);
+      if (!user) {
+        await signUp(serializedUser, req.user.provider, getProjectId(req) || 'yapomosh');
+        res.cookie('token', req.user.accessToken);
+      } else {
+        res.cookie('token', user.providerData.accessToken);
+      }
+      res.redirect(302, pageToRedirect);
+    },
+  ],
+  {
+    method: 'get',
     router,
     auth: false,
   },

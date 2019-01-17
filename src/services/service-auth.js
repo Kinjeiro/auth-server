@@ -35,7 +35,6 @@ export function validateApplicationClient(clientId, clientSecret, throwError = f
       if (err) {
         return reject(err);
       }
-
       if (!client || client.clientSecret !== clientSecret) {
         if (!client) {
           logger.error(`-- Client "${clientId}" doesn't registered.`);
@@ -214,12 +213,15 @@ export async function checkUniqueWithError(projectId, data) {
 // SIGNUP
 // ======================================================
 export async function signUp(userData, provider, projectId) {
-  const userDataFinal = {
+  const { providerData } = userData;
+  const userDataFinal =  {
     ...pick(userData, EDITABLE_ATTRS),
     username: userData.username,
     password: userData.password,
+    providerData,
     provider,
     projectId,
+
   };
   const {
     username,
