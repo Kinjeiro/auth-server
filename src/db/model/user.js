@@ -30,7 +30,7 @@ export const PROTECTED_ATTRS = [
 export const EDITABLE_ATTRS = [
   'username', // нужно проверить уникальность
   'aliasId', // нужно проверить уникальность
-  'email', // нужно проверить уникальность
+  'email',
   'firstName',
   'lastName',
   'middleName',
@@ -45,7 +45,6 @@ export const EDITABLE_ATTRS = [
 
 export const UNIQUE_ATTRS = [
   'username',
-  'email',
   'aliasId',
 ];
 
@@ -99,6 +98,8 @@ export const UserSchema = new mongoose.Schema({
     required: false, // может и не быть почты
     // у нас уникальность должна быть в рамках projectId, поэтому берем на себя проверку уникальности
     // unique: true,
+    // при авторизации в соц сетях может быть одинаковый email
+    unique: false,
     lowercase: true,
     trim: true,
     // match: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
@@ -241,10 +242,11 @@ export const UserSchema = new mongoose.Schema({
 UserSchema.virtual('userId')
   .set(function (userId) {
     // this._id = mongoose.Types.ObjectId.fromString(userId);
-    if (!isUserIdValid(userId)) {
-      throw new Error('Not valid userId format (see "shortid" package)');
-    }
-    this._id = userId;
+    const id = shortid.generate();
+    // if (!isUserIdValid(userId)) {
+    //   throw new Error('Not valid userId format (see "shortid" package)');
+    // }
+    this._id = id;
   })
   .get(function () {
     // return this.id;

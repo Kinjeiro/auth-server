@@ -3,6 +3,7 @@ import Handlebars from 'handlebars';
 import omit from 'lodash/omit';
 
 import { getHandlebarsTemplate } from '../../utils/node-utils';
+import { imageURLToBase64 } from '../../utils/common';
 import config from '../../config';
 import createRoute from '../../helpers/express/create-route';
 import logger from '../../helpers/logger';
@@ -13,22 +14,36 @@ import { OMIT_USER_ATTRS } from '../../db/model/user';
 
 import {
   middlewareClientPasswordStrategy,
-  middlewareGoogleStrategy,
+  initAuthMiddleware,
   middlewareGoogleCallbackStrategy,
+  middlewareVkontakteCallbackStrategy,
+  middlewareFacebookCallbackStrategy,
+  middlewareGoogleStrategy,
+  middlewareFacebookStrategy,
+  middlewareVkontakteStrategy,
 } from '../../auth/authenticate-passport';
-import oauth2TokenMiddlewares from '../../auth/authorization-oauth2';
+import oauth2TokenMiddlewares, {
+  generateTokens,
+} from '../../auth/authorization-oauth2';
 import {
   signUp,
   signOut,
   createResetPasswordToken,
   resetPassword,
   findUserByEmail,
-  findUserById,
+  findUserByName,
 } from '../../services/service-auth';
+import { getClientProviderCredentials } from '../../services/service-clients';
 
 const hbsMailSignup = getHandlebarsTemplate(path.resolve(__dirname, './mail-signup.hbs'));
 const hbsMailResetPassword = getHandlebarsTemplate(path.resolve(__dirname, './mail-reset-password.hbs'));
 const hbsMailResetPasswordSuccess = getHandlebarsTemplate(path.resolve(__dirname, './mail-reset-password-success.hbs'));
+
+const PROVIDERS = {
+  GOOGLE: 'google',
+  FACEBOOK: 'facebook',
+  VKONTAKTE: 'vkontakte',
+};
 
 function getEmailHtml(emailOptions, defaultHbsTemplate, contextData = {}) {
   const { html, text } = emailOptions || {};
@@ -74,9 +89,7 @@ const router = createRoute(
       } catch (error) {
         logger.error(error);
         if (error.errors) {
-          return res
-            .status(422)
-            .json(new ValidationError(error.errors));
+          return res.status(422).json(new ValidationError(error.errors));
         }
         throw error;
       }
@@ -224,19 +237,90 @@ createRoute(
     auth: false,
   },
 );
-// для теста
-let pageToRedirect;
+
+const serializeUser = async user => {
+  const {
+    provider,
+    id,
+    displayName,
+    accessToken,
+    refreshToken,
+    photos,
+    name,
+    emails,
+  } = user;
+
+  return {
+    username: `${provider.charAt(0).toUpperCase() +
+      provider.slice(1)}_User_${id}`,
+    userId: id,
+    profileImageURI: photos[0]
+      ? await imageURLToBase64(photos[0].value)
+      : undefined,
+    displayName,
+    provider,
+    providerData: {
+      accessToken,
+      refreshToken,
+    },
+    firstName: name.givenName,
+    lastName: name.familyName,
+    email: emails ? emails[0].value : undefined,
+  };
+};
+
+function checkProvider(provider) {
+  if (provider !== PROVIDERS.GOOGLE && provider !== PROVIDERS.FACEBOOK && provider !== PROVIDERS.VKONTAKTE) {
+    throw new Error(`Provider must be ${PROVIDERS.VKONTAKTE} || ${PROVIDERS.GOOGLE} || ${PROVIDERS.FACEBOOK}`);
+  }
+}
+
+const socialAuthHandler = async (req, res, next) => {
+  const { pageToRedirect, client_id: clientId, provider } = req.query;
+  if (!pageToRedirect || !clientId || !provider) {
+    throw new Error('pageToRedirect, provider and clientId must be in query');
+  }
+  checkProvider(provider);
+  req.session.pageToRedirect = pageToRedirect;
+  req.session.clientId = clientId;
+  const providerCredentials =
+    (await getClientProviderCredentials(clientId, provider)) ||
+    config.server.features.defaultProviderCredentials[provider];
+  initAuthMiddleware(providerCredentials, provider);
+  next();
+};
+
+const socialAuthCallbackHandler = async (req, res) => {
+  const { pageToRedirect, clientId } = req.session;
+  delete req.session.pageToRedirect;
+  delete req.session.clientId;
+  const serializedUser = await serializeUser(req.user);
+  let user = await findUserByName(
+    clientId,
+    serializedUser.username,
+    null,
+    true,
+  );
+  if (!user) {
+    user = await signUp(serializedUser, req.user.provider, clientId);
+  }
+  const tokens = await generateTokens({ clientId, userId: user.id });
+
+  res.cookie('accessToken', tokens.accessTokenValue);
+  res.cookie('refreshToken', tokens.refreshTokenValue);
+  res.cookie('authType', 'Bearer');
+  res.redirect(302, pageToRedirect);
+};
+
+createRoute('/google', [socialAuthHandler, middlewareGoogleStrategy], {
+  method: 'get',
+  router,
+  auth: false,
+});
 
 createRoute(
-  '/google',
-  [
-    async (req, res, next) => {
-      const url = req.get('referer');
-      pageToRedirect = url;
-      next(null, { pageToRedirect });
-    },
-    middlewareGoogleStrategy,
-  ],
+  '/google/callback',
+  [middlewareGoogleCallbackStrategy, socialAuthCallbackHandler],
   {
     method: 'get',
     router,
@@ -244,37 +328,31 @@ createRoute(
   },
 );
 
+createRoute('/vkontakte', [socialAuthHandler, middlewareVkontakteStrategy], {
+  method: 'get',
+  router,
+  auth: false,
+});
+
 createRoute(
-  '/google/callback',
-  [
-    middlewareGoogleCallbackStrategy,
-    async (req, res, next) => {
-      // TODO: сделать сериализатор для всех соцсетей
-      const serializedUser = {
-        username: req.user.id,
-        userId: req.user.id,
-        email: req.user.emails[0].value,
-        displayName: req.user.displayName,
-        firstName: req.user.name.givenName,
-        lastName: req.user.name.familyName,
-        // TODO: конвертить в base 64
-        // profileImageURI: req.user.photos[0] ? req.user.photos[0].value : null,
-        provider: req.user.provider,
-        providerData: {
-          accessToken: req.user.accessToken,
-          refreshToken: req.user.refreshToken,
-        },
-      };
-      const user = await findUserById(serializedUser.id, null, true);
-      if (!user) {
-        await signUp(serializedUser, req.user.provider, getProjectId(req) || 'yapomosh');
-        res.cookie('token', req.user.accessToken);
-      } else {
-        res.cookie('token', user.providerData.accessToken);
-      }
-      res.redirect(302, pageToRedirect);
-    },
-  ],
+  '/vkontakte/callback',
+  [middlewareVkontakteCallbackStrategy, socialAuthCallbackHandler],
+  {
+    method: 'get',
+    router,
+    auth: false,
+  },
+);
+
+createRoute('/facebook', [socialAuthHandler, middlewareFacebookStrategy], {
+  method: 'get',
+  router,
+  auth: false,
+});
+
+createRoute(
+  '/facebook/callback',
+  [middlewareFacebookCallbackStrategy, socialAuthCallbackHandler],
   {
     method: 'get',
     router,

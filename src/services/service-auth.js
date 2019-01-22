@@ -173,7 +173,7 @@ export async function checkUnique(projectId, data) {
       let user;
       switch (key) {
         case 'username': user = await findUserByName(projectId, value, null, true); break;
-        case 'email': user = await findUserByEmail(projectId, value, null, true); break;
+        // case 'email': user = await findUserByEmail(projectId, value, null, true); break;
         case 'aliasId': user = await findUserByAliasId(projectId, value, null, true); break;
         default:
           throw new Error(`Не найден провайдер для проверки уникальности поля "${key}".`);
@@ -213,7 +213,7 @@ export async function checkUniqueWithError(projectId, data) {
 // SIGNUP
 // ======================================================
 export async function signUp(userData, provider, projectId) {
-  const { providerData } = userData;
+  const { providerData, userId } = userData;
   const userDataFinal =  {
     ...pick(userData, EDITABLE_ATTRS),
     username: userData.username,
@@ -221,7 +221,7 @@ export async function signUp(userData, provider, projectId) {
     providerData,
     provider,
     projectId,
-
+    userId,
   };
   const {
     username,

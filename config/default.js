@@ -1,6 +1,6 @@
 const path = require('path');
 
-const defaultLogsPath = process.cwd() + '/logs/all.log';
+const defaultLogsPath = `${process.cwd()}/logs/all.log`;
 
 const packageJson = require(path.join(process.cwd(), 'package.json'));
 const APP_ID = packageJson.name;
@@ -44,8 +44,7 @@ module.exports = {
       // актуально для размера аватарки пользователя
       maxContentSize: '3mb',
 
-      expressServerOptions: {
-      },
+      expressServerOptions: {},
     },
 
     features: {
@@ -89,7 +88,8 @@ module.exports = {
       db: {
         mongoose: {
           uri: MONGO_URI || 'mongodb://localhost:27017/auth-server',
-          testUri: TEST_MONGO_URI || 'mongodb://localhost:27017/auth-serverTest',
+          testUri:
+            TEST_MONGO_URI || 'mongodb://localhost:27017/auth-serverTest',
           auth: {
             user: MONGO_USER || 'authServerUser',
             password: MONGO_PASSWORD || 'authAuth',
@@ -130,11 +130,28 @@ module.exports = {
           auth: {
             user: 'apikey',
             // Andrey (kinjeiro@gmail.com) account key
-            pass: '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',
+            pass:
+              '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',
           },
         },
         messageOptions: {
           from: 'kinjeiro@gmail.com',
+        },
+      },
+
+      defaultProviderCredentials: {
+        google: {
+          clientID:
+            '394823556664-aoitfhc89u3iqjf3al7t43hgec8a5ect.apps.googleusercontent.com',
+          clientSecret: 'ZjFviEL7W0y0IMgG6-tB_aBV',
+        },
+        facebook: {
+          clientID: 307565990106901,
+          clientSecret: 'dfe2246e8c6dfe4e8058d3e173d1d48c',
+        },
+        vkontakte: {
+          clientID: '6824177',
+          clientSecret: '6BF8i8t0KQ5DZ1xeAfQA',
         },
       },
 

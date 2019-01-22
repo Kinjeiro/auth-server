@@ -1,6 +1,7 @@
 .idea/
 .build/
 .build-docker/
+.vscode/
 node_modules/
 lib/
 logs/

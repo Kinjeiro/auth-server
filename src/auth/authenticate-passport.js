@@ -4,14 +4,16 @@ import { BasicStrategy } from 'passport-http';
 // import ClientPasswordStrategy from 'passport-oauth2-client-password';
 import BearerStrategy from 'passport-http-bearer';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy as VKontakteStrategy } from 'passport-vkontakte';
+import { Strategy as FacebookStrategy } from 'passport-facebook';
 
 import ClientPasswordStrategy from './passport-oauth2-client-password-strategy';
 
-import config from '../config';
 import logger from '../helpers/logger';
 import { getProjectId } from '../helpers/request-data';
 
 import { AccessToken } from '../db/model';
+import Client from '../db/model/client';
 import {
   findUserById,
   // findUserByName,
@@ -106,33 +108,16 @@ passport.use(
   }),
 );
 
-// const params = {
-//   access_token: 'Long_string',
-//   token_type: 'Bearer',
-//   expires_in: 3599, // seconds
-//   id_token: 'Longer_string',
-// }
+const bindTokens = (profile, accessToken, refreshToken) => {
+  const newProfile = { ...profile };
+  newProfile.accessToken = accessToken;
+  newProfile.refreshToken = refreshToken;
+  return newProfile;
+};
 
 const STRATEGY__GOOGLE = 'google';
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID:
-        '394823556664-aoitfhc89u3iqjf3al7t43hgec8a5ect.apps.googleusercontent.com',
-      clientSecret: 'ZjFviEL7W0y0IMgG6-tB_aBV',
-      callbackURL: 'http://localhost:1337/api/auth/google/callback',
-      passReqToCallback: true,
-    },
-    async (req, accessToken, refreshToken, params, profile, done) => {
-      const newProfile = { ...profile };
-      newProfile.projectId = getProjectId(req);
-      newProfile.accessToken = accessToken;
-      newProfile.refreshToken = refreshToken;
-      return done(null, newProfile);
-    },
-  ),
-);
-
+const STRATEGY__VKONTAKTE = 'vkontakte';
+const STRATEGY__FACEBOOK = 'facebook';
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
@@ -144,6 +129,59 @@ passport.deserializeUser((obj, done) => {
 export function expressPlugin() {
   return passport.initialize();
 }
+
+const createGoogleAuthMiddleware = (credentials, provider) => new GoogleStrategy(
+  {
+    ...credentials,
+    callbackURL: `/api/auth/${provider}/callback`,
+  },
+  async (accessToken, refreshToken, params, profile, done) => {
+    const newProfile = bindTokens(profile, accessToken, refreshToken);
+    return done(null, newProfile);
+  },
+);
+
+const createFacebookAuthMiddleware = (credentials, provider) => new FacebookStrategy(
+  {
+    ...credentials,
+    callbackURL: `/api/auth/${provider}/callback`,
+    profileFields: [
+      'id',
+      'displayName',
+      'email',
+      'first_name',
+      'last_name',
+      'picture',
+    ],
+  },
+  (accessToken, refreshToken, profile, done) => {
+    const newProfile = bindTokens(profile, accessToken, refreshToken);
+    return done(null, newProfile);
+  },
+);
+
+const createVkontakteAuthMiddleware = (credentials, provider) => new VKontakteStrategy(
+  {
+    ...credentials,
+    callbackURL: `/api/auth/${provider}/callback`,
+  },
+  (accessToken, refreshToken, params, profile, done) => {
+    const newProfile = bindTokens(profile, accessToken, refreshToken);
+    newProfile.emails = [{ value: params.email }];
+    return done(null, newProfile);
+  },
+);
+
+const AuthMiddlewaresFacade = {
+  google: (credentials, provider) => createGoogleAuthMiddleware(credentials, provider),
+  facebook: (credentials, provider) => createFacebookAuthMiddleware(credentials, provider),
+  vkontakte: (credentials, provider) => createVkontakteAuthMiddleware(credentials, provider),
+};
+
+export const initAuthMiddleware = (credentials, provider) => {
+  const middlewareCreator = AuthMiddlewaresFacade[provider];
+  passport.use(provider, middlewareCreator(credentials, provider));
+};
 
 /**
  * проверяют в body client_id и client_secret
@@ -165,7 +203,6 @@ export const middlewareBearerStrategy = passport.authenticate(
   { session: true },
 );
 
-
 // опции prompt и accessType нужны для получения refreshToken, без них приходит undefined
 export const middlewareGoogleStrategy = passport.authenticate(
   STRATEGY__GOOGLE,
@@ -180,6 +217,27 @@ export const middlewareGoogleStrategy = passport.authenticate(
 export const middlewareGoogleCallbackStrategy = passport.authenticate(
   STRATEGY__GOOGLE,
   { failureRedirect: '/' },
+);
+
+export const middlewareVkontakteStrategy = passport.authenticate(
+  STRATEGY__VKONTAKTE,
+  {
+    scope: ['email'],
+  },
+);
+
+export const middlewareVkontakteCallbackStrategy = passport.authenticate(
+  STRATEGY__VKONTAKTE,
+  { failureRedirect: '/' },
+);
+
+export const middlewareFacebookCallbackStrategy = passport.authenticate(
+  STRATEGY__FACEBOOK,
+  { failureRedirect: '/' },
+);
+
+export const middlewareFacebookStrategy = passport.authenticate(
+  STRATEGY__FACEBOOK,
 );
 
 export default passport;

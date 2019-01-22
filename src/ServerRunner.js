@@ -4,14 +4,13 @@ import bodyParser from 'body-parser';
 import methodOverride from 'method-override';
 import morgan from 'morgan';
 import debug from 'debug';
+import session from 'express-session';
 
 import config from './config';
 import { errorToJson } from './utils/common';
 import logger from './helpers/logger';
 import initDB from './db/init-models';
-import {
-  connect,
-} from './db/db-utils';
+import { connect } from './db/db-utils';
 
 import { expressPlugin as authenticatePlugin } from './auth/authenticate-passport';
 import applyRoutes from './api';
@@ -31,6 +30,12 @@ export default class ServerRunner {
     const limit = config.server.serverConfig.maxContentSize;
 
     return [
+      session({
+        secret: 'reagentum_secret_key',
+        cookie: { maxAge: 60000 },
+        resave: false,
+        saveUninitialized: true,
+      }),
       bodyParser.json({
         limit,
       }),
@@ -50,9 +55,15 @@ export default class ServerRunner {
     ];
   }
 
-  errorHandle(err, req, res, next)  {
+  errorHandle(err, req, res, next) {
     res.status(err.status || 500);
-    logger.error('[%s %d] %s', req.method, res.statusCode, err.message, err.stack);
+    logger.error(
+      '[%s %d] %s',
+      req.method,
+      res.statusCode,
+      err.message,
+      err.stack,
+    );
 
     // не сериализует вложенные объекты
     // return res.json(JSON.stringify(err, Object.getOwnPropertyNames(err)));
@@ -75,9 +86,7 @@ export default class ServerRunner {
   }
 
   getRouteAppliers() {
-    return [
-      applyRoutes,
-    ];
+    return [applyRoutes];
   }
 
   initDataBase() {
@@ -89,7 +98,11 @@ export default class ServerRunner {
 
   initServer() {
     if (!config.common.isProduction) {
-      logger.debug('=== SERVER CONFIG ===\n', JSON.stringify(config, null, 2), '\n\n');
+      logger.debug(
+        '=== SERVER CONFIG ===\n',
+        JSON.stringify(config, null, 2),
+        '\n\n',
+      );
     }
 
     this.app = this.createApp(config.server.serverConfig.expressServerOptions);

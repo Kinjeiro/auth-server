@@ -21,7 +21,7 @@ import { middlewareBasicAndClientPasswordStrategy } from './authenticate-passpor
 const authServer = oauth2orize.createServer();
 
 // Destroys any old tokens and generates a new access and refresh tokenMiddlewares
-async function generateTokens(data, done) {
+export async function generateTokens(data, done) {
   // curries in `done` callback so we don't need to pass it
   await RefreshToken.remove(data);
   await AccessToken.remove(data);
