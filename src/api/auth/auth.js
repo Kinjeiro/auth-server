@@ -3,7 +3,7 @@ import Handlebars from 'handlebars';
 import omit from 'lodash/omit';
 
 import { getHandlebarsTemplate } from '../../utils/node-utils';
-import { imageURLToBase64 } from '../../utils/common';
+import { imageURLToBase64, getRefererHostFullUrl } from '../../utils/common';
 import config from '../../config';
 import createRoute from '../../helpers/express/create-route';
 import logger from '../../helpers/logger';
@@ -39,11 +39,13 @@ const hbsMailSignup = getHandlebarsTemplate(path.resolve(__dirname, './mail-sign
 const hbsMailResetPassword = getHandlebarsTemplate(path.resolve(__dirname, './mail-reset-password.hbs'));
 const hbsMailResetPasswordSuccess = getHandlebarsTemplate(path.resolve(__dirname, './mail-reset-password-success.hbs'));
 
+
 const PROVIDERS = {
   GOOGLE: 'google',
   FACEBOOK: 'facebook',
   VKONTAKTE: 'vkontakte',
 };
+
 
 function getEmailHtml(emailOptions, defaultHbsTemplate, contextData = {}) {
   const { html, text } = emailOptions || {};
@@ -276,12 +278,13 @@ function checkProvider(provider) {
 }
 
 const socialAuthHandler = async (req, res, next) => {
-  const { pageToRedirect, client_id: clientId, provider } = req.query;
-  if (!pageToRedirect || !clientId || !provider) {
-    throw new Error('pageToRedirect, provider and clientId must be in query');
+  const { client_id: clientId, provider } = req.query;
+
+  if (!clientId || !provider) {
+    throw new Error('Provider and clientId must be in query');
   }
   checkProvider(provider);
-  req.session.pageToRedirect = pageToRedirect;
+  req.session.pageToRedirect = getRefererHostFullUrl(req);
   req.session.clientId = clientId;
   const providerCredentials =
     (await getClientProviderCredentials(clientId, provider)) ||

@@ -4,6 +4,7 @@ import lodashDifference from 'lodash/difference';
 import crypto from 'crypto';
 import https from 'https';
 import http from 'http';
+import url from 'url';
 
 // todo @ANKU @LOW - можно потом сделать jwt токен и удобно проверять expire
 /*
@@ -124,14 +125,14 @@ export function promiseMap(nameToPromiseMap, valueFunc = null) {
     }, {}));
 }
 
-export function imageURLToBase64(url) {
+export function imageURLToBase64(urlPath) {
   return new Promise((resolve, reject) => {
-    if (!url) {
+    if (!urlPath) {
       reject(new Error('No url for convert'));
     }
-    const protocol = url.includes('https') ? https : http;
+    const protocol = urlPath.includes('https') ? https : http;
     protocol
-      .get(url, response => {
+      .get(urlPath, response => {
         response.setEncoding('base64');
         let body = `data:${response.headers['content-type']};base64,`;
         response.on('data', data => {
@@ -145,4 +146,10 @@ export function imageURLToBase64(url) {
         reject(e);
       });
   });
+}
+
+export function getRefererHostFullUrl(req) {
+  const referer = req.get('referer');
+  const refererUrl = url.parse(referer);
+  return `${refererUrl.protocol}//${refererUrl.host}`;
 }
