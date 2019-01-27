@@ -1,5 +1,10 @@
+/* eslint-disable no-continue */
+/* eslint-disable no-restricted-syntax */
 import lodashDifference from 'lodash/difference';
 import crypto from 'crypto';
+import https from 'https';
+import http from 'http';
+import url from 'url';
 
 // todo @ANKU @LOW - можно потом сделать jwt токен и удобно проверять expire
 /*
@@ -29,10 +34,15 @@ export function wrapToArray(value = null) {
 }
 
 export function objectValues(object = {}) {
-  return Object.keys(object).map((key) => object[key]);
+  return Object.keys(object).map(key => object[key]);
 }
 
-export function includes(first, second, emptyIsInclude = false, allIncludes = false) {
+export function includes(
+  first,
+  second,
+  emptyIsInclude = false,
+  allIncludes = false,
+) {
   const firstA = wrapToArray(first);
   const secondA = wrapToArray(second);
 
@@ -43,7 +53,8 @@ export function includes(first, second, emptyIsInclude = false, allIncludes = fa
     return false;
   }
 
-  return firstA[allIncludes ? 'every' : 'some']((firstValue) => secondA.includes(firstValue));
+  return firstA[allIncludes ? 'every' : 'some'](firstValue =>
+    secondA.includes(firstValue));
 }
 
 export function difference(source, minusValues) {
@@ -91,7 +102,7 @@ export function errorToJson(error) {
   // People sometimes throw things besides Error objects, so…
   if (typeof error === 'function') {
     // JSON.stringify discards functions. We do too, unless a function is thrown directly.
-    return `[Function: ${(error.name || 'anonymous')}]`;
+    return `[Function: ${error.name || 'anonymous'}]`;
   }
 
   return error;
@@ -105,14 +116,40 @@ export function errorToJson(error) {
  */
 export function promiseMap(nameToPromiseMap, valueFunc = null) {
   const keys = Object.keys(nameToPromiseMap);
-  return Promise.all(keys.map((key) => (
-    valueFunc
-      ? valueFunc(key, nameToPromiseMap[key])
-      : nameToPromiseMap[key]
-  )))
-    .then((results) => keys.reduce((resultMap, key, index) => {
+  return Promise.all(keys.map(key =>
+    (valueFunc ? valueFunc(key, nameToPromiseMap[key]) : nameToPromiseMap[key]))).then(results =>
+    keys.reduce((resultMap, key, index) => {
       // eslint-disable-next-line no-param-reassign
       resultMap[key] = results[index];
       return resultMap;
     }, {}));
+}
+
+export function imageURLToBase64(urlPath) {
+  return new Promise((resolve, reject) => {
+    if (!urlPath) {
+      reject(new Error('No url for convert'));
+    }
+    const protocol = urlPath.includes('https') ? https : http;
+    protocol
+      .get(urlPath, response => {
+        response.setEncoding('base64');
+        let body = `data:${response.headers['content-type']};base64,`;
+        response.on('data', data => {
+          body += data;
+        });
+        response.on('end', () => {
+          resolve(body);
+        });
+      })
+      .on('error', e => {
+        reject(e);
+      });
+  });
+}
+
+export function getRefererHostFullUrl(req) {
+  const referer = req.get('referer');
+  const refererUrl = url.parse(referer);
+  return `${refererUrl.protocol}//${refererUrl.host}`;
 }

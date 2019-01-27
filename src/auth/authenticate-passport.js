@@ -3,16 +3,17 @@ import passport from 'passport';
 import { BasicStrategy } from 'passport-http';
 // import ClientPasswordStrategy from 'passport-oauth2-client-password';
 import BearerStrategy from 'passport-http-bearer';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy as VKontakteStrategy } from 'passport-vkontakte';
+import { Strategy as FacebookStrategy } from 'passport-facebook';
 
 import ClientPasswordStrategy from './passport-oauth2-client-password-strategy';
 
-import config from '../config';
 import logger from '../helpers/logger';
 import { getProjectId } from '../helpers/request-data';
 
-import {
-  AccessToken,
-} from '../db/model';
+import { AccessToken } from '../db/model';
+import Client from '../db/model/client';
 import {
   findUserById,
   // findUserByName,
@@ -22,8 +23,8 @@ import {
 
 const STRATEGY__CLIENT_PASSWORD = 'oauth2-client-password';
 // todo @ANKU @LOW - вообще странное решение брать из req.body я бы знанчения клал в header чтобы изолировать их от основных данных + можно оформить как авторизацию API KEY (переписать стратегию)
-passport.use(new ClientPasswordStrategy(
-  async (clientId, clientSecret, done) => {
+passport.use(
+  new ClientPasswordStrategy(async (clientId, clientSecret, done) => {
     try {
       logger.debug(`(Client\\Password strategy) Check clientId ${clientId}`);
       const client = await validateApplicationClient(clientId, clientSecret);
@@ -36,31 +37,36 @@ passport.use(new ClientPasswordStrategy(
     } catch (error) {
       done(error);
     }
-  }));
-
-const STRATEGY__BASIC_USER_PASSWORD = 'basic';
-passport.use(new BasicStrategy(
-  {
-    passReqToCallback: true,
-  },
-  async (req, username, password, done) => {
-    try {
-      const projectId = getProjectId(req);
-      logger.info(`(Authenticate Basic) Check user ${username} [${projectId}]`);
-      const user = await findUserByIdentify(projectId, username, password);
-      if (user) {
-        logger.info(`-- found user ${user.username}`);
-      }
-      done(null, user);
-    } catch (error) {
-      done(error);
-    }
   }),
 );
 
+const STRATEGY__BASIC_USER_PASSWORD = 'basic';
+passport.use(
+  new BasicStrategy(
+    {
+      passReqToCallback: true,
+    },
+    async (req, username, password, done) => {
+      try {
+        const projectId = getProjectId(req);
+        logger.info(
+          `(Authenticate Basic) Check user ${username} [${projectId}]`,
+        );
+        const user = await findUserByIdentify(projectId, username, password);
+        if (user) {
+          logger.info(`-- found user ${user.username}`);
+        }
+        done(null, user);
+      } catch (error) {
+        done(error);
+      }
+    },
+  ),
+);
+
 const STRATEGY__BEARER_TOKEN = 'bearer';
-passport.use(new BearerStrategy(
-  (accessToken, done) => {
+passport.use(
+  new BearerStrategy((accessToken, done) => {
     logger.info(`(Authenticate Bearer) Check token ${accessToken}`);
     AccessToken.findOne({ token: accessToken }, async (err, token) => {
       if (err) {
@@ -68,19 +74,18 @@ passport.use(new BearerStrategy(
       }
 
       if (!token) {
-        logger.warn('-- token doesn\'t exist');
+        logger.warn("-- token doesn't exist");
         return done(null, false);
       }
 
-      const {
-        expiresInDate,
-        userId,
-      } = token;
+      const { expiresInDate, userId } = token;
 
       if (Date.now() > expiresInDate.getTime()) {
-        logger.info(`-- token for userId "${userId}" expired. Remove access token`);
+        logger.info(
+          `-- token for userId "${userId}" expired. Removing access token`,
+        );
 
-        AccessToken.remove({ token: accessToken }, (error) => {
+        AccessToken.remove({ token: accessToken }, error => {
           if (error) {
             return done(error);
           }
@@ -103,40 +108,136 @@ passport.use(new BearerStrategy(
   }),
 );
 
-// for save web session - если используются web session куки
-// passport.serializeUser(function(user, done) {
-//   done(null, user.id);
-// });
-//
-// passport.deserializeUser(function(id, done) {
-//   User.findById(id, function(err, user) {
-//     done(err, user);
-//   });
-// });
+const bindTokens = (profile, accessToken, refreshToken) => {
+  const newProfile = { ...profile };
+  newProfile.accessToken = accessToken;
+  newProfile.refreshToken = refreshToken;
+  return newProfile;
+};
+
+const STRATEGY__GOOGLE = 'google';
+const STRATEGY__VKONTAKTE = 'vkontakte';
+const STRATEGY__FACEBOOK = 'facebook';
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser((obj, done) => {
+  done(null, obj);
+});
 
 export function expressPlugin() {
   return passport.initialize();
 }
 
+const createGoogleAuthMiddleware = (credentials, provider) => new GoogleStrategy(
+  {
+    ...credentials,
+    callbackURL: `/api/auth/${provider}/callback`,
+  },
+  async (accessToken, refreshToken, params, profile, done) => {
+    const newProfile = bindTokens(profile, accessToken, refreshToken);
+    return done(null, newProfile);
+  },
+);
+
+const createFacebookAuthMiddleware = (credentials, provider) => new FacebookStrategy(
+  {
+    ...credentials,
+    callbackURL: `/api/auth/${provider}/callback`,
+    profileFields: [
+      'id',
+      'displayName',
+      'email',
+      'first_name',
+      'last_name',
+      'picture',
+    ],
+  },
+  (accessToken, refreshToken, profile, done) => {
+    const newProfile = bindTokens(profile, accessToken, refreshToken);
+    return done(null, newProfile);
+  },
+);
+
+const createVkontakteAuthMiddleware = (credentials, provider) => new VKontakteStrategy(
+  {
+    ...credentials,
+    callbackURL: `/api/auth/${provider}/callback`,
+  },
+  (accessToken, refreshToken, params, profile, done) => {
+    const newProfile = bindTokens(profile, accessToken, refreshToken);
+    newProfile.emails = [{ value: params.email }];
+    return done(null, newProfile);
+  },
+);
+
+const AuthMiddlewaresFacade = {
+  google: (credentials, provider) => createGoogleAuthMiddleware(credentials, provider),
+  facebook: (credentials, provider) => createFacebookAuthMiddleware(credentials, provider),
+  vkontakte: (credentials, provider) => createVkontakteAuthMiddleware(credentials, provider),
+};
+
+export const initAuthMiddleware = (credentials, provider) => {
+  const middlewareCreator = AuthMiddlewaresFacade[provider];
+  passport.use(provider, middlewareCreator(credentials, provider));
+};
+
 /**
  * проверяют в body client_id и client_secret
  */
-export const middlewareClientPasswordStrategy =
-  passport.authenticate(STRATEGY__CLIENT_PASSWORD, { session: false });
+export const middlewareClientPasswordStrategy = passport.authenticate(
+  STRATEGY__CLIENT_PASSWORD,
+  { session: false },
+);
 
-export const middlewareBasicAndClientPasswordStrategy =
-  passport.authenticate(
-    [
-      STRATEGY__CLIENT_PASSWORD,
-      STRATEGY__BASIC_USER_PASSWORD,
-    ],
-    {
-      session: false,
-    },
-  );
+export const middlewareBasicAndClientPasswordStrategy = passport.authenticate(
+  [STRATEGY__CLIENT_PASSWORD, STRATEGY__BASIC_USER_PASSWORD],
+  {
+    session: false,
+  },
+);
 
-export const middlewareBearerStrategy =
-  passport.authenticate(STRATEGY__BEARER_TOKEN, { session: false });
+export const middlewareBearerStrategy = passport.authenticate(
+  STRATEGY__BEARER_TOKEN,
+  { session: true },
+);
+
+// опции prompt и accessType нужны для получения refreshToken, без них приходит undefined
+export const middlewareGoogleStrategy = passport.authenticate(
+  STRATEGY__GOOGLE,
+  {
+    prompt: 'consent',
+    accessType: 'offline',
+    session: false,
+    scope: ['email', 'profile'],
+  },
+);
+
+export const middlewareGoogleCallbackStrategy = passport.authenticate(
+  STRATEGY__GOOGLE,
+  { failureRedirect: '/' },
+);
+
+export const middlewareVkontakteStrategy = passport.authenticate(
+  STRATEGY__VKONTAKTE,
+  {
+    scope: ['email'],
+  },
+);
+
+export const middlewareVkontakteCallbackStrategy = passport.authenticate(
+  STRATEGY__VKONTAKTE,
+  { failureRedirect: '/' },
+);
+
+export const middlewareFacebookCallbackStrategy = passport.authenticate(
+  STRATEGY__FACEBOOK,
+  { failureRedirect: '/' },
+);
+
+export const middlewareFacebookStrategy = passport.authenticate(
+  STRATEGY__FACEBOOK,
+);
 
 export default passport;
-

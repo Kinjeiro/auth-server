@@ -3,6 +3,7 @@ import Handlebars from 'handlebars';
 import omit from 'lodash/omit';
 
 import { getHandlebarsTemplate } from '../../utils/node-utils';
+import { imageURLToBase64, getRefererHostFullUrl } from '../../utils/common';
 import config from '../../config';
 import createRoute from '../../helpers/express/create-route';
 import logger from '../../helpers/logger';
@@ -11,25 +12,43 @@ import { getProjectId } from '../../helpers/request-data';
 import ValidationError from '../../models/errors/ValidationError';
 import { OMIT_USER_ATTRS } from '../../db/model/user';
 
-import { middlewareClientPasswordStrategy } from '../../auth/authenticate-passport';
-import oauth2TokenMiddlewares from '../../auth/authorization-oauth2';
+import {
+  middlewareClientPasswordStrategy,
+  initAuthMiddleware,
+  middlewareGoogleCallbackStrategy,
+  middlewareVkontakteCallbackStrategy,
+  middlewareFacebookCallbackStrategy,
+  middlewareGoogleStrategy,
+  middlewareFacebookStrategy,
+  middlewareVkontakteStrategy,
+} from '../../auth/authenticate-passport';
+import oauth2TokenMiddlewares, {
+  generateTokens,
+} from '../../auth/authorization-oauth2';
 import {
   signUp,
   signOut,
   createResetPasswordToken,
   resetPassword,
   findUserByEmail,
+  findUserByName,
 } from '../../services/service-auth';
+import { getClientProviderCredentials } from '../../services/service-clients';
 
 const hbsMailSignup = getHandlebarsTemplate(path.resolve(__dirname, './mail-signup.hbs'));
 const hbsMailResetPassword = getHandlebarsTemplate(path.resolve(__dirname, './mail-reset-password.hbs'));
 const hbsMailResetPasswordSuccess = getHandlebarsTemplate(path.resolve(__dirname, './mail-reset-password-success.hbs'));
 
+
+const PROVIDERS = {
+  GOOGLE: 'google',
+  FACEBOOK: 'facebook',
+  VKONTAKTE: 'vkontakte',
+};
+
+
 function getEmailHtml(emailOptions, defaultHbsTemplate, contextData = {}) {
-  const {
-    html,
-    text,
-  } = emailOptions || {};
+  const { html, text } = emailOptions || {};
   return text
     ? null
     : html
@@ -48,11 +67,7 @@ const router = createRoute(
     // создаем пользователя
     async (req, res) => {
       const {
-        body: {
-          client_id,
-          userData,
-          emailOptions,
-        },
+        body: { client_id, userData, emailOptions },
       } = req;
       try {
         const user = await signUp(userData, client_id, getProjectId(req));
@@ -76,9 +91,7 @@ const router = createRoute(
       } catch (error) {
         logger.error(error);
         if (error.errors) {
-          return res
-            .status(422)
-            .json(new ValidationError(error.errors));
+          return res.status(422).json(new ValidationError(error.errors));
         }
         throw error;
       }
@@ -93,15 +106,11 @@ const router = createRoute(
 /**
  * @see - \src\api\swagger.yaml
  */
-createRoute(
-  '/signin',
-  oauth2TokenMiddlewares,
-  {
-    method: 'post',
-    auth: false,
-    router,
-  },
-);
+createRoute('/signin', oauth2TokenMiddlewares, {
+  method: 'post',
+  auth: false,
+  router,
+});
 
 /**
  * @see - \src\api\swagger.yaml
@@ -111,10 +120,7 @@ createRoute(
   (req, res) => {
     // See \src\auth\authenticate-passport.js
     // Req.user and req.authInfo are set using the `info` argument supplied by `BearerStrategy`.
-    const {
-      user,
-      authInfo,
-    } = req;
+    const { user, authInfo } = req;
 
     res.json({
       ...omit(user, OMIT_USER_ATTRS),
@@ -133,9 +139,7 @@ createRoute(
   '/signout',
   async (req, res) => {
     const {
-      user: {
-        userId,
-      },
+      user: { userId },
     } = req;
 
     return res.json(await signOut(userId));
@@ -144,7 +148,6 @@ createRoute(
     router,
   },
 );
-
 
 export const PARAM__RESET_PASSWORD_TOKEN = 'resetToken';
 /**
@@ -179,14 +182,10 @@ createRoute(
         await sendMail(
           email,
           emailOptions.subject || 'Сброс пароля',
-          getEmailHtml(
-            emailOptions,
-            hbsMailResetPassword,
-            {
-              ...user,
-              URL: fullResetPasswordPageUrl,
-            },
-          ),
+          getEmailHtml(emailOptions, hbsMailResetPassword, {
+            ...user,
+            URL: fullResetPasswordPageUrl,
+          }),
           emailOptions,
         );
       }
@@ -211,11 +210,7 @@ createRoute(
     middlewareClientPasswordStrategy,
     async (req, res) => {
       const {
-        body: {
-          resetPasswordToken,
-          newPassword,
-          emailOptions = {},
-        },
+        body: { resetPasswordToken, newPassword, emailOptions = {} },
       } = req;
 
       const user = await resetPassword(resetPasswordToken, newPassword);
@@ -240,6 +235,129 @@ createRoute(
   ],
   {
     method: 'post',
+    router,
+    auth: false,
+  },
+);
+
+const serializeUser = async user => {
+  const {
+    provider,
+    id,
+    displayName,
+    accessToken,
+    refreshToken,
+    photos,
+    name,
+    emails,
+  } = user;
+
+  return {
+    username: `${provider.charAt(0).toUpperCase() +
+      provider.slice(1)}_User_${id}`,
+    userId: id,
+    profileImageURI: photos[0]
+      ? await imageURLToBase64(photos[0].value)
+      : undefined,
+    displayName,
+    provider,
+    providerData: {
+      accessToken,
+      refreshToken,
+    },
+    firstName: name.givenName,
+    lastName: name.familyName,
+    email: emails ? emails[0].value : undefined,
+  };
+};
+
+function checkProvider(provider) {
+  if (provider !== PROVIDERS.GOOGLE && provider !== PROVIDERS.FACEBOOK && provider !== PROVIDERS.VKONTAKTE) {
+    throw new Error(`Provider must be ${PROVIDERS.VKONTAKTE} || ${PROVIDERS.GOOGLE} || ${PROVIDERS.FACEBOOK}`);
+  }
+}
+
+const socialAuthHandler = async (req, res, next) => {
+  const { client_id: clientId, provider } = req.query;
+
+  if (!clientId || !provider) {
+    throw new Error('Provider and clientId must be in query');
+  }
+  checkProvider(provider);
+  req.session.pageToRedirect = getRefererHostFullUrl(req);
+  req.session.clientId = clientId;
+  const providerCredentials =
+    (await getClientProviderCredentials(clientId, provider)) ||
+    config.server.features.defaultProviderCredentials[provider];
+  initAuthMiddleware(providerCredentials, provider);
+  next();
+};
+
+const socialAuthCallbackHandler = async (req, res) => {
+  const { pageToRedirect, clientId } = req.session;
+  delete req.session.pageToRedirect;
+  delete req.session.clientId;
+  const serializedUser = await serializeUser(req.user);
+  let user = await findUserByName(
+    clientId,
+    serializedUser.username,
+    null,
+    true,
+  );
+  if (!user) {
+    user = await signUp(serializedUser, req.user.provider, clientId);
+  }
+  const tokens = await generateTokens({ clientId, userId: user.id });
+
+  res.cookie('accessToken', tokens.accessTokenValue);
+  res.cookie('refreshToken', tokens.refreshTokenValue);
+  res.cookie('authType', 'Bearer');
+  res.redirect(302, pageToRedirect);
+};
+
+createRoute('/google', [socialAuthHandler, middlewareGoogleStrategy], {
+  method: 'get',
+  router,
+  auth: false,
+});
+
+createRoute(
+  '/google/callback',
+  [middlewareGoogleCallbackStrategy, socialAuthCallbackHandler],
+  {
+    method: 'get',
+    router,
+    auth: false,
+  },
+);
+
+createRoute('/vkontakte', [socialAuthHandler, middlewareVkontakteStrategy], {
+  method: 'get',
+  router,
+  auth: false,
+});
+
+createRoute(
+  '/vkontakte/callback',
+  [middlewareVkontakteCallbackStrategy, socialAuthCallbackHandler],
+  {
+    method: 'get',
+    router,
+    auth: false,
+  },
+);
+
+createRoute('/facebook', [socialAuthHandler, middlewareFacebookStrategy], {
+  method: 'get',
+  router,
+  auth: false,
+});
+
+createRoute(
+  '/facebook/callback',
+  [middlewareFacebookCallbackStrategy, socialAuthCallbackHandler],
+  {
+    method: 'get',
     router,
     auth: false,
   },
