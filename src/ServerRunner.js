@@ -27,7 +27,7 @@ export default class ServerRunner {
   }
 
   getMiddlewarePlugins() {
-    const limit = config.server.serverConfig.maxContentSize;
+    const limit = config.server.main.maxContentSize;
 
     return [
       session({
@@ -105,7 +105,7 @@ export default class ServerRunner {
       );
     }
 
-    this.app = this.createApp(config.server.serverConfig.expressServerOptions);
+    this.app = this.createApp(config.server.main.expressServerOptions);
 
     // ======================================================
     // FIRST MIDDLEWARES
@@ -134,7 +134,7 @@ export default class ServerRunner {
     const { app } = this;
 
     // eslint-disable-next-line prefer-destructuring
-    const port = config.server.serverConfig.port;
+    const port = config.server.main.port;
 
     app.set('port', port);
 

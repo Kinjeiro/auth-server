@@ -39,7 +39,7 @@ module.exports = {
     */
     parentConfigs: null,
 
-    serverConfig: {
+    main: {
       port: PORT,
       // актуально для размера аватарки пользователя
       maxContentSize: '3mb',
