@@ -40,18 +40,18 @@
     "test:watch": "npm run test -- --watch",
     "----- GIT -----": "----------",
     "compile": "rimraf lib/* -f && babel src --out-dir lib --copy-files",
-    "publish-patch": "npm run release-patch && npm publish",
-    "publish-patch-r": "git push --follow-tags && npm publish",
     "release-patch": "npm version patch -m \"chore(*) patch version: %s\"",
     "release-minor": "npm version minor -m \"chore(*) minor version: %s\"",
     "release-major": "npm version major -m \"chore(*) major version: %s\"",
+    "publish-patch": "npm run release-patch && npm publish",
+    "publish-patch-r": "git push --follow-tags && npm publish",
     "preversion": "npm run mongo:run:windows && npm run test",
     "version": "npm run compile && git add -A",
-    "postversion": "git push --follow-tags"
+    "postversion": "git push --follow-tags --no-verify"
   },
   "husky": {
     "hooks": {
-      "pre-push": "git pull --rebase --no-verify && npm run release-patch && npm publish --no-verify && git push --no-verify"
+      "pre-push": "git pull --rebase --no-verify && npm run release-patch && npm publish && git push --no-verify"
     }
   },
   "deleteDependencies": {
