@@ -51,7 +51,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-push": "git pull --rebase --no-verify && npm run publish-patch && git push --no-verify"
+      "pre-push": "git pull --rebase --no-verify && npm run release-patch && npm publish --no-verify && git push --no-verify"
     }
   },
   "deleteDependencies": {
