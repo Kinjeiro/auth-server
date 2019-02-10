@@ -7,7 +7,7 @@ const APP_ID = packageJson.name;
 const APP_VERSION = packageJson.version;
 
 const {
-  PORT = 1337,
+  PORT = 1338,
   NODE_ENV = 'development',
   MONGO_URI,
   TEST_MONGO_URI,

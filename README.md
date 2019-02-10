@@ -22,11 +22,11 @@ npm run update:daemon:development && npm run logs
 ```
 5. Открываем браузер и пользуемся апи, описанным в swagger
 ```
-http://dev.reagentum.ru:1337/api-docs
+http://dev.reagentum.ru:1338/api-docs
 ```
 
 ## API
-Все начинаются с префикса - api (к примеру ```http://dev.reagentum.ru:1337/api/health```)
+Все начинаются с префикса - api (к примеру ```http://dev.reagentum.ru:1338/api/health```)
 
 Health
 - [GET] /api/health
