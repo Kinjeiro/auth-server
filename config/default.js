@@ -130,8 +130,7 @@ module.exports = {
           auth: {
             user: 'apikey',
             // Andrey (kinjeiro@gmail.com) account key
-            pass:
-              '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',
+            pass: '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',
           },
         },
         messageOptions: {
@@ -139,19 +138,22 @@ module.exports = {
         },
       },
 
+      // Andrey (kinjeiro@gmail.com) account key
       defaultProviderCredentials: {
         google: {
-          clientID:
-            '394823556664-aoitfhc89u3iqjf3al7t43hgec8a5ect.apps.googleusercontent.com',
-          clientSecret: 'ZjFviEL7W0y0IMgG6-tB_aBV',
+          // https://console.developers.google.com/apis/credentials/oauthclient/756888674250-hll8u81fcpeu4t56elschs01g0deg1j3.apps.googleusercontent.com?project=reagentum-231315&hl=ru
+          clientID: '756888674250-hll8u81fcpeu4t56elschs01g0deg1j3.apps.googleusercontent.com',
+          clientSecret: '2aEr4CLOg37KoF0Nok8l3Hyh',
         },
         facebook: {
-          clientID: 307565990106901,
-          clientSecret: 'dfe2246e8c6dfe4e8058d3e173d1d48c',
+          // https://developers.facebook.com/apps/2226184230986091/settings/basic/
+          clientID: 2226184230986091,
+          clientSecret: '6b95d53ebaa413b851c21411cdfb3f6f',
         },
         vkontakte: {
-          clientID: '6824177',
-          clientSecret: '6BF8i8t0KQ5DZ1xeAfQA',
+          // https://vk.com/editapp?id=6855085&section=options
+          clientID: '6855085',
+          clientSecret: 'k3x4cn9PWb3dwGuBKefz',
         },
       },
 
