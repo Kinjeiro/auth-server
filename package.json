@@ -52,6 +52,11 @@
     "version": "npm run compile && git add -A",
     "postversion": "git push --follow-tags"
   },
+  "husky": {
+    "hooks": {
+      "pre-push": "git pull --rebase --no-verify && npm run publish-patch && git push --no-verify"
+    }
+  },
   "deleteDependencies": {
     "passport-oauth2-client-password": "~0.1.x"
   },
