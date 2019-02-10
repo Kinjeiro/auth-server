@@ -91,11 +91,16 @@ describe('[api] auth', function anon() {
       } catch (errorResponse) {
         expect(errorResponse.response.body.status).to.equal(422);
         console.warn('ANKU , errorResponse.response.body', errorResponse.response.body);
-        expect(Object.keys(errorResponse.response.body.validationErrors)).has.length(2);
+
+        // todo @ANKU @CRIT @MAIN @debugger - вернуть когда мерж с социалками и email снова станет уникальным
+        // expect(Object.keys(errorResponse.response.body.validationErrors)).has.length(2);
+        // expect(errorResponse.response.body.validationErrors.username)
+        //   .to.equal(`Пользователь с "username" равным "${testUser.username}" уже существует`);
+        // expect(errorResponse.response.body.validationErrors.email)
+        //   .to.equal(`Пользователь с "email" равным "${testUser.email}" уже существует`);
+        expect(Object.keys(errorResponse.response.body.validationErrors)).has.length(1);
         expect(errorResponse.response.body.validationErrors.username)
           .to.equal(`Пользователь с "username" равным "${testUser.username}" уже существует`);
-        expect(errorResponse.response.body.validationErrors.email)
-          .to.equal(`Пользователь с "email" равным "${testUser.email}" уже существует`);
       }
     });
 

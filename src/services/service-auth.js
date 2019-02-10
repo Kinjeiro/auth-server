@@ -173,6 +173,7 @@ export async function checkUnique(projectId, data) {
       let user;
       switch (key) {
         case 'username': user = await findUserByName(projectId, value, null, true); break;
+        // todo @ANKU @CRIT @MAIN @debugger - НУЖНО ВЕРНУТЬ ЭТУ ПРОВЕРКУ как только мерж с социалками сделаем
         // case 'email': user = await findUserByEmail(projectId, value, null, true); break;
         case 'aliasId': user = await findUserByAliasId(projectId, value, null, true); break;
         default:
