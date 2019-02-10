@@ -15,6 +15,20 @@ export const CLIENTS = {
     clientId: projectId,
     clientSecret: `${projectId}${projectId}`,
     name: projectId,
+    providerCredentials: {
+      google: {
+        clientID: null,
+        clientSecret: null,
+      },
+      facebook: {
+        clientID: null,
+        clientSecret: null,
+      },
+      vkontakte: {
+        clientID: null,
+        clientSecret: null,
+      },
+    },
   },
   // frontCore: {
   //   clientId: '@reagentum/front-core',

@@ -25,7 +25,12 @@ export async function getClientProviderCredentials(clientId, provider) {
     return undefined;
   }
   const providerCredentials = client.get(`providerCredentials.${provider}`);
-  if (!providerCredentials || !Object.keys(providerCredentials).length) {
+  if (
+    !providerCredentials
+    || !Object.keys(providerCredentials).length
+    // если пустое значение в пермом поле
+    || !providerCredentials[Object.keys(providerCredentials)[0]]
+  ) {
     return undefined;
   }
   return providerCredentials;

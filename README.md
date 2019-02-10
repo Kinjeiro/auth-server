@@ -12,8 +12,27 @@ npm i && npm i cross-env -g
 ```
 2. Создадим клиента и моки под него
 ```
-cross-env PROJECT_ID=myProject USE_MOCK=1 NODE_ENV=development npm run mongo:mock 
+cross-env PROJECT_ID=myProject USE_MOCK=1 NODE_ENV=development npm run mongo:fill 
 ```
+Если нужно, добавить у новосозданного клиента плючи приложений для социальной авторизации
+(по умолчанию будет использовать Reagentum приложение в этих социальных сетях) 
+```
+providerCredentials: {
+  google: {
+    clientID: null,
+    clientSecret: null,
+  },
+  facebook: {
+    clientID: null,
+    clientSecret: null,
+  },
+  vkontakte: {
+    clientID: null,
+    clientSecret: null,
+  },
+},
+```
+
 3. Если надо получать часть данных других пользователей внутри приложения, необходимо создать пользователя и через базу добавить ему роль ```protector``` и флаг ```isSystem: true``` (чтобы не показывать в общем списке пользователей)
 (Например на торговых площадках клиент, оплативший покупку, получает доступ к инфомарции телефона и почты продавца. Приложение должно запросить эти данные с помощью этой protector учетки)
 4. Запустим билд и pm2 запустит daemon процесс. Глянем логи для него
@@ -22,7 +41,7 @@ npm run update:daemon:development && npm run logs
 ```
 5. Открываем браузер и пользуемся апи, описанным в swagger
 ```
-http://dev.reagentum.ru:1338/api-docs
+http://dev.reagentum.ru:1338
 ```
 
 ## API
