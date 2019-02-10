@@ -1,15 +1,14 @@
-/* eslint-disable comma-dangle,no-multi-str */
-const packageJson = require('./package.json');
+/* eslint-disable comma-dangle,no-multi-str,max-len */
+const path = require('path');
+const packageJson = require('../package.json');
+const {
+  DEFAULT_USER,
+  getLogPaths,
+  getAppPath,
+} = require('./ecosystem-utils');
 
 const appName = packageJson.name;
 const appVersion = packageJson.version;
-
-const DEFAULT_USER = 'root';
-function defaultAppPath(user) {
-  return user === 'root'
-    ? `/home/${appName}`
-    : `/home/${user}/${appName}`;
-}
 
 // Target server hostname or IP address
 const DEV_HOST = process.env.DEV_HOST
@@ -21,43 +20,51 @@ const DEV_USER = process.env.DEV_USER
 // Target server application path
 const DEV_APP_PATH = process.env.DEV_APP_PATH
   ? process.env.DEV_APP_PATH.trim()
-  : defaultAppPath(DEV_USER);
+  : getAppPath(DEV_USER);
 
 
 // Target server hostname or IP address
 const PROD_HOST = process.env.PROD_HOST
   ? process.env.PROD_HOST.trim()
-  : 'dev.reagentum.ru';
+  : 'front.reagentum.ru';
 const PROD_USER = process.env.PROD_USER
   ? process.env.PROD_USER.trim()
   : DEFAULT_USER;
 // Target server application path
 const PROD_APP_PATH = process.env.PROD_APP_PATH
   ? process.env.PROD_APP_PATH.trim()
-  : defaultAppPath(PROD_USER);
+  : getAppPath(PROD_USER);
 
 // Your repository
 // const REPO = 'git@gitlab.com:<project_name>.git';
 const REPO = process.env.REPO || packageJson.repository;
-// const REPO = 'git@gitlab.com:reagentum/reafront/auth-server-oauth2.git';
-// let REPO = process.env.REPO || packageJson.repository;
-// console.warn('ANKU , REPO', REPO);
-// REPO = `git${REPO.substr(REPO.indexOf('@'))}`;
-// console.warn('ANKU , REPO 2', REPO);
 
-// const DEV_CONTEXT_PATH = process.env.DEV_CONTEXT_PATH;
-// const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : undefined;
-
-const START_SCRIPT = process.env.START_SCRIPT || './.build/server.js';
-
-function deployOptions(isProduction = false) {
-  console.log(`
-    // ======================================================\
-    // ${appName}@${appVersion}\
-    // ======================================================\
+console.log(`
+    // ======================================================
+    // ${appName}@${appVersion}
+    // ======================================================
   `);
 
+console.log(`
+    Используйте у себя в package.json:
+    
+    "----- BUILD -----": "----------",
+    "build:inner": "node ./node_modules/@reagentum/front-core/build-scripts/update-babelrc.js && node ./node_modules/@reagentum/front-core/build-scripts/build.js",
+    "build:inner-env": "cross-env SERVER_PORT=3001 npm run build:inner",
+    "build:production": "cross-env NODE_ENV=production npm run build:inner-env",
+    "build:development": "cross-env NODE_ENV=development npm run build:inner-env",
+    "----- START DAEMON -----": "----------",
+    "start:daemon:development": "pm2 restart ./deploy/ecosystem.config.js --env development --update-env && pm2 save",
+    "start:daemon:production": "pm2 restart ./deploy/ecosystem.config.js --env production --update-env && pm2 save",
+  `);
+
+function deployOptions(isProduction = false) {
   const APP_PATH = isProduction ? PROD_APP_PATH : DEV_APP_PATH;
+  /*
+    @NOTE: у pm2 структура папок app: current \ source
+  */
+  // const APP_PATH_SOURCE = path.join(APP_PATH, 'source');
+
   let START_NODE_ENV_OBJECT = isProduction ? process.env.PROD_START_NODE_ENV_JSON : process.env.DEV_START_NODE_ENV_JSON;
   if (START_NODE_ENV_OBJECT) {
     START_NODE_ENV_OBJECT = JSON.parse(START_NODE_ENV_OBJECT);
@@ -75,8 +82,9 @@ function deployOptions(isProduction = false) {
       ' cross-env ',
     )
     : '';
+  console.log('START_NODE_ENV_STR: ', START_NODE_ENV_STR);
 
-  console.log('START_NODE_ENV_STR', START_NODE_ENV_STR);
+  const { log } = getLogPaths();
 
   return {
     // мы кладем ключ в DEPLOY KEYS в gitlab CI
@@ -102,6 +110,11 @@ function deployOptions(isProduction = false) {
     // установить на удаленном сервере последнюю версию приложения
     path: APP_PATH,
 
+    /*
+      @NOTE: если нужно ротейшен - https://github.com/keymetrics/pm2-logrotate
+    */
+    log_date_format: 'YYYY-MM-DD HH:mm:ss.SSS',
+
     // todo @ANKU @LOW - @BUG_OUT @GITLAB - у нас два обращение от private server to gitlab repo - здесь используются token keys
     // но при ошибки pm2 setup (так как директория уже существует в следующий раз) второй раз при деплои токен уже был недействителен
     // и падала ошибка:
@@ -110,21 +123,42 @@ function deployOptions(isProduction = false) {
     // выход из этой ситуации чтобы setup отрападывал без ошибок, поэтому добавили чтобы перед сетапом pm2 всегда очищал папку
     // pm2 ecosystem.config.js: 'pre-setup': `rm -rf ${APP_PATH}`,
     // pm2 создает папки: current, source и shared. Вот удаляем source
-    'pre-setup': `rm -rf ${APP_PATH}/source`,
+    // rm -rf ${APP_PATH}/source\
+    // todo @ANKU @LOW - сделать так чтобы когда идет обновление не останавливался текущий сервак
+    'pre-setup': `\
+      rm -rf ${APP_PATH}\
+    `,
     // 'post-setup': "apt-get install git ; ls -la",
     // 'pre-deploy-local': `\
     //   echo 'This is a local executed command'\
     //   mkdir -p ${APP_PATH}\
     // `,
+
+
+    /*
+      todo @ANKU @LOW - @BUG_OUT @node-gyp - gyp ERR! stack Error: not found: make
+      На машине нужно установить набор инструментов
+      # build-essential - нужна чтобы сбилдить node-gyp - https://stackoverflow.com/questions/14772508/npm-failed-to-install-time-with-make-not-found-error
+      # alpine-sdk - эквивалент для ubuntu чтобы собирать пакеты
+        - apt-get install build-essential
+        - apk add alpine-sdk
+    */
+    /*
+      todo @ANKU @LOW @BUG_OUT @npm @pm2 - нужно да npm install
+      1) первый - устанавливает - собирает библиотеку node-gyp но почему-то остальные не инсталит (config к примеру не устанавливался, был только в front-core)
+      2) второй - устанавливает депенденси нормальные
+    */
     'post-deploy': `\
-      npm install -g cross-env\
-      && npm install --no-save\
+      apt-get -y install build-essential\
+      && npm install -g cross-env\
+      && npm install\
+      && npm install\
       && npm run ${isProduction ? 'build:production' : 'build:development'}\
-      && ${START_NODE_ENV_STR} npm run start:daemon:${isProduction ? 'production' : 'development'}\
+      && ${START_NODE_ENV_STR} npm run ${isProduction ? 'start:daemon:production' : 'start:daemon:development'}\
       && pm2 save\
-      && echo 'wait 40 sec and show logs...'\
-      && sleep 40\
-      && tail --lines 500 $HOME/.pm2/logs/${appName.replace(/[@/\\.]/gi, '-')}-error.log\
+      && echo 'wait 30 sec and show logs...'\
+      && sleep 30\
+      && tail -n 300 ${log} || true\
     `,
   };
 }
@@ -138,21 +172,4 @@ module.exports = {
     development: deployOptions(),
     production: deployOptions(true),
   },
-
-  /**
-   * Application configuration section
-   * http://pm2.keymetrics.io/docs/usage/application-declaration/
-   */
-  apps: [
-    {
-      name: appName,
-      script: START_SCRIPT,
-      env_development: {
-        NODE_ENV: 'development',
-      },
-      env_production: {
-        NODE_ENV: 'production',
-      },
-    }
-  ]
 };
