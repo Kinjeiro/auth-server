@@ -6,6 +6,7 @@ const { getLogPaths } = require('./ecosystem-utils');
 
 const appName = packageJson.name;
 // const appVersion = packageJson.version;
+console.warn('ANKU , config', config);
 const appPort = config.server.main.port;
 
 const START_SCRIPT = process.env.START_SCRIPT || './dist/server.js';
