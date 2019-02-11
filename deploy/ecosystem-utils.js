@@ -27,11 +27,11 @@ function defaultAppLogFolderPath(user = DEFAULT_USER, logsFolder = 'logs') {
     : `/home/${user}/${logsFolder}`;
 }
 
-function getLogPaths(logPath = defaultAppLogFolderPath()) {
+function getLogPaths(appNameInner = getProcessAppName(), logPath = defaultAppLogFolderPath()) {
   return {
-    output: path.join(logPath, `${appName}-out.log`),
-    error: path.join(logPath, `${appName}-error.log`),
-    log: path.join(logPath, `${appName}-combi.log`),
+    output: path.join(logPath, `${appNameInner}-out.log`),
+    error: path.join(logPath, `${appNameInner}-error.log`),
+    log: path.join(logPath, `${appNameInner}-combi.log`),
   };
 }
 

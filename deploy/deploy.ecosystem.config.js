@@ -60,10 +60,11 @@ function deployOptions(isProduction = false) {
     @NOTE: у pm2 структура папок app: current \ source
   */
   // const APP_PATH_SOURCE = path.join(APP_PATH, 'source');
-  const APP_PATH = getAppPath(USER, CUSTOM_APP_PATH || getProcessAppName(PORT));
+  const appNameFinal = getProcessAppName(PORT);
+  const APP_PATH = getAppPath(USER, CUSTOM_APP_PATH || appNameFinal);
   console.log('APP_PATH: ', APP_PATH);
 
-  const { log } = getLogPaths();
+  const { log } = getLogPaths(appNameFinal);
   console.log('App log file: ', log);
 
   let startNodeEnvObject = {};
@@ -76,7 +77,7 @@ function deployOptions(isProduction = false) {
   const startNodeEnvStr = startNodeEnvObject && Object.keys(startNodeEnvObject).length > 0
     ? Object.keys(startNodeEnvObject).reduce(
       (result, envKey) => {
-        let value = START_NODE_ENV_OBJECT[envKey];
+        let value = startNodeEnvObject[envKey];
         if (typeof value !== 'number') {
           value = `'${value}'`;
         }
