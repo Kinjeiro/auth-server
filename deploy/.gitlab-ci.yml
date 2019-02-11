@@ -9,12 +9,14 @@
 # 2) Переменные из VARIABLES (https://gitlab.com/<your_project>/settings/ci_cd -> VARIABLES)
 #   DEV_PRIVATE_SSH_KEY - содержимое приватного ключа сервера
 #   DEV_HOST
+#   DEV_PORT
 #   DEV_USER
 #   DEV_APP_PATH
 #   DEV_START_NODE_ENV_JSON
 #
 #   PROD_PRIVATE_SSH_KEY
 #   PROD_HOST
+#   PROD_PORT
 #   PROD_USER
 #   PROD_APP_PATH
 #   PROD_START_NODE_ENV_JSON
@@ -85,6 +87,7 @@ stages:
       echo "REPO: $REPO"
       echo "DEPLOY_ENV: $DEPLOY_ENV"
       echo "TARGET_HOST: $TARGET_HOST_FINAL"
+      echo "TARGET_PORT: $TARGET_PORT"
       echo "TARGET_USER: $TARGET_USER"
       echo "TARGET_USER_FINAL: $TARGET_USER_FINAL"
       echo "TARGET_PRIVATE_SSH_KEY: true"
@@ -208,6 +211,7 @@ deploy_dev:
 #    REPO: $CI_PROJECT_URL
     REPO: $CI_REPOSITORY_URL
     TARGET_HOST: $DEV_HOST
+    TARGET_PORT: $DEV_PORT
     TARGET_PRIVATE_SSH_KEY: $DEV_PRIVATE_SSH_KEY
 #    // todo @ANKU @LOW @BUG_OUT @gitlab - они даже не прикрутили еще дефолтные значения https://gitlab.com/gitlab-org/gitlab-runner/issues/1867
 #    TARGET_USER: ${DEV_USER:-root}
@@ -234,6 +238,7 @@ deploy_prod:
     DEPLOY_ENV: "production"
     REPO: $CI_REPOSITORY_URL
     TARGET_HOST: $PROD_HOST
+    TARGET_PORT: $PROD_PORT
     TARGET_PRIVATE_SSH_KEY: $PROD_PRIVATE_SSH_KEY
     TARGET_USER: $PROD_USER
     TARGET_APP_PATH: $PROD_APP_PATH

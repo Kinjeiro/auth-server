@@ -1,77 +1,80 @@
 /* eslint-disable comma-dangle,no-multi-str,max-len */
-const path = require('path');
+// const path = require('path');
+
 const packageJson = require('../package.json');
 const {
   DEFAULT_USER,
   getLogPaths,
   getAppPath,
+  getProcessAppName,
 } = require('./ecosystem-utils');
 
 const appName = packageJson.name;
 const appVersion = packageJson.version;
 
-// Target server hostname or IP address
-const DEV_HOST = process.env.DEV_HOST
-  ? process.env.DEV_HOST.trim()
-  : 'dev.reagentum.ru';
-const DEV_USER = process.env.DEV_USER
-  ? process.env.DEV_USER.trim()
-  : DEFAULT_USER;
-// Target server application path
-const DEV_APP_PATH = process.env.DEV_APP_PATH
-  ? process.env.DEV_APP_PATH.trim()
-  : getAppPath(DEV_USER);
+const {
+  DEV_HOST = 'dev.reagentum.ru',
+  DEV_PORT,
+  DEV_USER = DEFAULT_USER,
+  DEV_APP_PATH,
+  DEV_START_NODE_ENV_JSON,
 
+  PROD_HOST = 'front.reagentum.ru',
+  PROD_PORT,
+  PROD_USER = DEFAULT_USER,
+  PROD_APP_PATH,
+  PROD_START_NODE_ENV_JSON,
 
-// Target server hostname or IP address
-const PROD_HOST = process.env.PROD_HOST
-  ? process.env.PROD_HOST.trim()
-  : 'front.reagentum.ru';
-const PROD_USER = process.env.PROD_USER
-  ? process.env.PROD_USER.trim()
-  : DEFAULT_USER;
-// Target server application path
-const PROD_APP_PATH = process.env.PROD_APP_PATH
-  ? process.env.PROD_APP_PATH.trim()
-  : getAppPath(PROD_USER);
-
-// Your repository
-// const REPO = 'git@gitlab.com:<project_name>.git';
-const REPO = process.env.REPO || packageJson.repository;
+  // const REPO = 'git@gitlab.com:<project_name>.git';
+  REPO = packageJson.repository,
+} = process.env;
 
 console.log(`
-    // ======================================================
-    // ${appName}@${appVersion}
-    // ======================================================
-  `);
+  // ======================================================
+  // ${appName}@${appVersion}
+  // ======================================================
+`);
 
 console.log(`
-    Используйте у себя в package.json:
-    
-    "----- BUILD -----": "----------",
-    "build:inner": "node ./node_modules/@reagentum/front-core/build-scripts/update-babelrc.js && node ./node_modules/@reagentum/front-core/build-scripts/build.js",
-    "build:inner-env": "cross-env SERVER_PORT=3001 npm run build:inner",
-    "build:production": "cross-env NODE_ENV=production npm run build:inner-env",
-    "build:development": "cross-env NODE_ENV=development npm run build:inner-env",
-    "----- START DAEMON -----": "----------",
-    "start:daemon:development": "pm2 restart ./deploy/ecosystem.config.js --env development --update-env && pm2 save",
-    "start:daemon:production": "pm2 restart ./deploy/ecosystem.config.js --env production --update-env && pm2 save",
-  `);
+  Используйте у себя в package.json:
+  
+  "----- BUILD -----": "----------",
+  "build:inner": "node ./node_modules/@reagentum/front-core/build-scripts/update-babelrc.js && node ./node_modules/@reagentum/front-core/build-scripts/build.js",
+  "build:inner-env": "npm run build:inner",
+  "build:production": "cross-env NODE_ENV=production npm run build:inner-env",
+  "build:development": "cross-env NODE_ENV=development npm run build:inner-env",
+  "----- START DAEMON -----": "----------",
+  "start:daemon:development": "pm2 restart ./deploy/ecosystem.config.js --env development --update-env && pm2 save",
+  "start:daemon:production": "pm2 restart ./deploy/ecosystem.config.js --env production --update-env && pm2 save",
+  "start:daemon": "npm run start:daemon:production",
+`);
 
 function deployOptions(isProduction = false) {
-  const APP_PATH = isProduction ? PROD_APP_PATH : DEV_APP_PATH;
+  const HOST = isProduction ? PROD_HOST : DEV_HOST;
+  const PORT = isProduction ? PROD_PORT : DEV_PORT;
+  const USER = isProduction ? PROD_USER : DEV_USER;
+  const CUSTOM_APP_PATH = isProduction ? PROD_APP_PATH : DEV_APP_PATH;
+  const START_NODE_ENV_OBJECT = isProduction ? PROD_START_NODE_ENV_JSON : DEV_START_NODE_ENV_JSON;
+
   /*
     @NOTE: у pm2 структура папок app: current \ source
   */
   // const APP_PATH_SOURCE = path.join(APP_PATH, 'source');
+  const APP_PATH = getAppPath(USER, CUSTOM_APP_PATH || getProcessAppName(PORT));
+  console.log('APP_PATH: ', APP_PATH);
 
-  let START_NODE_ENV_OBJECT = isProduction ? process.env.PROD_START_NODE_ENV_JSON : process.env.DEV_START_NODE_ENV_JSON;
+  const { log } = getLogPaths();
+  console.log('App log file: ', log);
+
+  let startNodeEnvObject = {};
   if (START_NODE_ENV_OBJECT) {
-    START_NODE_ENV_OBJECT = JSON.parse(START_NODE_ENV_OBJECT);
+    startNodeEnvObject = JSON.parse(START_NODE_ENV_OBJECT);
   }
-
-  const START_NODE_ENV_STR = START_NODE_ENV_OBJECT && Object.keys(START_NODE_ENV_OBJECT).length > 0
-    ? Object.keys(START_NODE_ENV_OBJECT).reduce(
+  if (PORT) {
+    startNodeEnvObject.PORT = PORT;
+  }
+  const startNodeEnvStr = startNodeEnvObject && Object.keys(startNodeEnvObject).length > 0
+    ? Object.keys(startNodeEnvObject).reduce(
       (result, envKey) => {
         let value = START_NODE_ENV_OBJECT[envKey];
         if (typeof value !== 'number') {
@@ -82,9 +85,7 @@ function deployOptions(isProduction = false) {
       ' cross-env ',
     )
     : '';
-  console.log('START_NODE_ENV_STR: ', START_NODE_ENV_STR);
-
-  const { log } = getLogPaths();
+  console.log('startNodeEnvStr: ', startNodeEnvStr);
 
   return {
     // мы кладем ключ в DEPLOY KEYS в gitlab CI
@@ -99,8 +100,8 @@ function deployOptions(isProduction = false) {
     // key: '~/.ssh/id_rsa',
     // но мы используем GITLAB DEPLOY KEYS
 
-    user: isProduction ? PROD_USER : DEV_USER,
-    host: isProduction ? PROD_HOST : DEV_HOST,
+    user: USER,
+    host: HOST,
     ssh_options: ['StrictHostKeyChecking=no', 'PasswordAuthentication=no'],
 
     // скачать на удаленном сервере репозиторий
@@ -154,7 +155,7 @@ function deployOptions(isProduction = false) {
       && npm install\
       && npm install\
       && npm run ${isProduction ? 'build:production' : 'build:development'}\
-      && ${START_NODE_ENV_STR} npm run ${isProduction ? 'start:daemon:production' : 'start:daemon:development'}\
+      && ${startNodeEnvStr} npm run ${isProduction ? 'start:daemon:production' : 'start:daemon:development'}\
       && pm2 save\
       && echo 'wait 30 sec and show logs...'\
       && sleep 30\

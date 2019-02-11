@@ -7,17 +7,19 @@
 2) Переменные из VARIABLES (https://gitlab.com/<your_project>/settings/ci_cd -> VARIABLES)
 Они могут уточнять наши глобальные переменные из https://gitlab.com/groups/reagentum/-/settings/ci_cd 
 ```
-  DEV_PRIVATE_SSH_KEY                   - содержимое приватного ключа сервера
+  [!] DEV_PRIVATE_SSH_KEY               - содержимое приватного ключа сервера
+  [!] DEV_PORT      (8080)              - порт приложения (к примеру, у нас на деве множество корных проектов и нужно чтобы они отличались портом)
   DEV_HOST          (dev.reagentum.ru)  - хост на который деплоим
   DEV_USER          (root)              - пользователь ключа, который мы положили в DEPLOYS_KEYS
-  DEV_APP_PATH      (/home/<app_name>)  - путь до приложения (pm2 делает три папки source (главная), target и )
+  DEV_APP_PATH      (/home/<app_name>_<port>)  - путь до приложения (pm2 делает три папки source (главная), target и )
   DEV_START_NODE_ENV_JSON               - json с переменными
 ```
 ```
-  PROD_PRIVATE_SSH_KEY
+  [!] PROD_PRIVATE_SSH_KEY
+  [!] PROD_PORT     (8080)                    
   PROD_HOST         (front.reagentum.ru)
   PROD_USER         (root)
-  PROD_APP_PATH     (/home/<app_name>)     
+  PROD_APP_PATH     (/home/<app_name>_<port>)     
   PROD_START_NODE_ENV_JSON
 ```
 Достпуны переменные от Gitlab CI - https://docs.gitlab.com/ee/ci/variables/#predefined-variables-environment-variables

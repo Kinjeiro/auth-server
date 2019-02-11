@@ -1,16 +1,19 @@
 const path = require('path');
-const config = require('config');
 
 const packageJson = require('../package.json');
 
+const {
+  PORT,
+  SERVER_PORT,
+} = process.env;
 const appName = packageJson.name;
 
 const DEFAULT_USER = 'root';
 
-function getProcessAppName() {
+function getProcessAppName(port = PORT || SERVER_PORT) {
   // todo @ANKU @LOW - убрать запуск внутрь доккера и не придется так далеть
   // в имени приложения будет проставлять порт, чтобы можно было бы несколько инстансов поднимать на одной машине
-  return `${appName}_${config.server.main.port}`;
+  return `${appName}_${port || 8080}`;
 }
 
 function defaultAppPath(user = DEFAULT_USER, defaultAppName = getProcessAppName()) {
