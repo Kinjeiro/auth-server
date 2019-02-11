@@ -4,7 +4,12 @@ const {
   getProcessAppName
 } = require('./ecosystem-utils');
 
-const START_SCRIPT = process.env.START_SCRIPT || './dist/server.js';
+const {
+  START_SCRIPT = './dist/server.js',
+} = process.env;
+
+const logs = getLogPaths();
+console.log('APP LOGS', logs);
 
 module.exports = {
   /**
@@ -16,7 +21,7 @@ module.exports = {
       name: getProcessAppName(),
       script: START_SCRIPT,
 
-      ...getLogPaths(),
+      ...logs,
 
       env_development: {
         NODE_ENV: 'development',
