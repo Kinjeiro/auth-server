@@ -3,7 +3,12 @@
 ## Установка и настройка
 * [Настройка Mongo DB](./db/README.md)
 
+## Deploy pm2 и GitLab CI
+* [Deploy](./deploy/DEPLOY.md)
+
 ## Запуск сервера
+Переходим в папку ```/home/@reagentum/auth-server_1338/source```
+
 К примеру, проект ```myProject``` (name из проектного package.json)
 
 1. Установим нужные зависимости
