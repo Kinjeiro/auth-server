@@ -150,6 +150,7 @@ module.exports = {
         google: {
           // https://codd-wd.ru/shpargalka-poluchenie-tokenov-dlya-raboty-s-api-servisov-google/
           // https://console.developers.google.com/apis/credentials/oauthclient/756888674250-hll8u81fcpeu4t56elschs01g0deg1j3.apps.googleusercontent.com?project=reagentum-231315&hl=ru
+          // зачем затребовал включить Google Plus Api
           clientID: '756888674250-hll8u81fcpeu4t56elschs01g0deg1j3.apps.googleusercontent.com',
           clientSecret: '2aEr4CLOg37KoF0Nok8l3Hyh',
         },

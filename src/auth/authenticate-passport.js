@@ -137,7 +137,55 @@ const createGoogleAuthMiddleware = (credentials, provider) => new GoogleStrategy
     callbackURL: `/api/auth/${provider}/callback`,
   },
   async (accessToken, refreshToken, params, profile, done) => {
-    console.warn('ANKU GOOGLE, accessToken, refreshToken, profile', accessToken, refreshToken, profile, params);
+    /*
+    ЕСТЬ refreshToken
+
+    const profile = {
+      id: '114336819963004264943',
+      displayName: 'Андрей Кузьмин',
+      name: {
+        familyName: 'Кузьмин',
+        givenName: 'Андрей',
+      },
+      emails: [
+        {
+          value: 'kinjeiro@gmail.com',
+          type: 'account',
+        },
+      ],
+      photos: [
+        { value: 'https://lh5.googleusercontent.com/-vQDJPd5A1hA/AAAAAAAAAAI/AAAAAAAACAc/pvsVx6xInj4/s50/photo.jpg' }
+      ],
+      gender: undefined,
+      provider: 'google',
+      _raw: '...',
+      _json:
+        {
+          kind: 'plus#person',
+          etag: '"k-5ZH5-QJvSewqvyYHTE9ETORZg/vYagjCKajjRBxpEGT5fDAclb1W0"',
+          emails: [[Object]],
+          id: '114336819963004264943',
+          displayName: 'Андрей Кузьмин',
+          name: {
+            familyName: 'Кузьмин',
+            givenName: 'Андрей',
+          },
+          image:
+            {
+              url: 'https://lh5.googleusercontent.com/-vQDJPd5A1hA/AAAAAAAAAAI/AAAAAAAACAc/pvsVx6xInj4/s50/photo.jpg',
+              isDefault: false,
+            },
+          language: 'ru',
+        },
+    };
+    const params = {
+      access_token: 'ya29.GlvPBpRAMyEf3T-EBT8YhUokczx8k7h0pXSJsMNVtwhx16-WP8tHZyazhRMLJ3yaslAP_18i6bv7xHisguFjnCaULFydHXZNNbePRzHI0g-5BHNV6Z4-6vdII2ls',
+      expires_in: 3600,
+      scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+      token_type: 'Bearer',
+      id_token: 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjVmZTJkNTQxYTQyODJiN2FlMzYyOGZhMDc0ZGQ4YmVhNmRhNWIxOWIiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI3NTY4ODg2NzQyNTAtaGxsOHU4MWZjcGV1NHQ1NmVsc2NoczAxZzBkZWcxajMuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI3NTY4ODg2NzQyNTAtaGxsOHU4MWZjcGV1NHQ1NmVsc2NoczAxZzBkZWcxajMuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTQzMzY4MTk5NjMwMDQyNjQ5NDMiLCJlbWFpbCI6ImtpbmplaXJvQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJhdF9oYXNoIjoiXzNXOE50UHA1TVlvcm5kckpaV2ZOdyIsIm5hbWUiOiLQkNC90LTRgNC10Lkg0JrRg9C30YzQvNC40L0iLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDUuZ29vZ2xldXNlcmNvbnRlbnQuY29tLy12UURKUGQ1QTFoQS9BQUFBQUFBQUFBSS9BQUFBQUFBQUNBYy9wdnNWeDZ4SW5qNC9zOTYtYy9waG90by5qcGciLCJnaXZlbl9uYW1lIjoi0JDQvdC00YDQtdC5IiwiZmFtaWx5X25hbWUiOiLQmtGD0LfRjNC80LjQvSIsImxvY2FsZSI6InJ1IiwiaWF0IjoxNTUyODQ0NTY4LCJleHAiOjE1NTI4NDgxNjh9.eBvOV1-a5a3k9D65GeyShAQmwj7l9GmMLT4pVkL2mfoUej7u49S7bBqihrtpjEIu8kgPLsFD6Jt-RUaW-iGg3BzwcYVuQP18uKoh6fM3E9qbwKC_JtcI2Dt0rG4H1_EUWG1POfkjo8ys0ZP9SVjzFEp8q65EnXLqkrEo5Ms18mZr1MGMB0LBWMILVFK-SZTmrOeIZrphrcbcFRP-lAM6X8GmwvmCe2pkGQh9NZPA2OxLHNcU3e8yBiHOScdD0aeluzacP24VD7pncIKOPAUN_7fN-ffN3fvAhFg9RF4iv4NSBe6HnTWg-3p4J6ubADDegb16r_kRPqHRwYxROp_tJQ',
+    }; */
+
     const newProfile = bindTokens(profile, accessToken, refreshToken);
     return done(null, newProfile);
   },
@@ -147,18 +195,75 @@ const createFacebookAuthMiddleware = (credentials, provider) => new FacebookStra
   {
     ...credentials,
     callbackURL: `/api/auth/${provider}/callback`,
+    /*
+    https://developers.facebook.com/docs/graph-api/reference/user
+
+    'id':          'id',
+    'username':    'username',
+    'displayName': 'name',
+    'name':       ['last_name', 'first_name', 'middle_name'],
+    'gender':      'gender',
+    'birthday':    'birthday',
+    'profileUrl':  'link',
+    'emails':      'email',
+    'photos':      'picture'
+    */
     profileFields: [
       'id',
-      'displayName',
+
+      // (#12) username field is deprecated for versions v2.0 and higher
+      // 'username',
       'email',
+
+      'displayName',
+      // 'name',
       'first_name',
+      'middle_name',
       'last_name',
+      'short_name',
+
       'picture',
+
+      // нужно специально одобрения приложения в facebook для них - https://developers.facebook.com/docs/facebook-login/review/
+      // 'gender', // scope: user_gender
+      // 'birthday', // scope: user_birthday
+      // 'link', // scope user_link
+      // hometown // scope user_hometown
+      // address | location // scope user_location
     ],
   },
   (accessToken, refreshToken, profile, done) => {
-    console.warn('ANKU FACEBOOK, accessToken, refreshToken, profile', accessToken, refreshToken, profile);
+    /*
+    НЕТУ refreshToken
+
+    const profile = {
+      id: '2252706994794621',
+      username: undefined,
+      displayName: 'Andrey Kuzmin',
+      name: {
+        familyName: 'Kuzmin',
+        givenName: 'Andrey',
+        middleName: undefined,
+      },
+      gender: undefined,
+      profileUrl: undefined,
+      emails: [{ value: 'kinjeiro@gmail.com' }],
+      photos: [{ value: 'https://platform-lookaside.fbsbx.com/platform/profilepic/?asid=2252706994794621&height=50&width=50&ext=1555425609&hash=AeTqAVHtcRPmOtjL' }],
+      provider: 'facebook',
+      _raw: '...',
+      _json: {
+        id: '2252706994794621',
+        email: 'kinjeiro@gmail.com',
+        name: 'Andrey Kuzmin',
+        first_name: 'Andrey',
+        last_name: 'Kuzmin',
+        picture: { data: [Object] },
+      },
+    }; */
     const newProfile = bindTokens(profile, accessToken, refreshToken);
+    newProfile.username = newProfile.username
+      || (newProfile.emails && newProfile.emails[0] && newProfile.emails[0].value)
+      || newProfile.id;
     return done(null, newProfile);
   },
 );
@@ -168,8 +273,10 @@ const createVkontakteAuthMiddleware = (credentials, provider) => new VKontakteSt
     ...credentials,
     callbackURL: `/api/auth/${provider}/callback`,
   },
-  (accessToken, refreshToken, params, profile, done) => {
+  (accessToken, refreshToken, params, userProfile, done) => {
     /*
+      НЕТУ refreshToken
+
       const profile = {
         id: 225097,
         username: 'kinjeiro',
@@ -206,12 +313,11 @@ const createVkontakteAuthMiddleware = (credentials, provider) => new VKontakteSt
         email: 'kinjeiro@gmail.com'
       };
     */
-    console.warn('ANKU VK, accessToken, refreshToken, profile', accessToken, refreshToken, profile, params);
     // todo @ANKU @CRIT @MAIN - получать code и его использовать как refresh_token
     // todo @ANKU @CRIT @MAIN - получать фио, пол и все возможное
-    const newProfile = bindTokens(profile, accessToken, refreshToken);
-    newProfile.emails = [{ value: params.email }];
-    return done(null, newProfile);
+    const userProfileFinal = bindTokens(userProfile, accessToken, refreshToken);
+    userProfileFinal.emails = [{ value: params.email }];
+    return done(null, userProfileFinal);
   },
 );
 
@@ -290,6 +396,16 @@ export const middlewareVkontakteCallbackStrategy = passport.authenticate(
 
 export const middlewareFacebookStrategy = passport.authenticate(
   STRATEGY__FACEBOOK,
+  {
+    /*
+      https://developers.facebook.com/docs/facebook-login/permissions/
+
+      Обратите внимание: даже если вы запросили разрешение email, нет гарантий, что вы получите доступ к эл. адресу человека. Например, если человек зарегистрировался на Facebook с использованием телефонного номера, а не эл. адреса, то поле эл. адреса может быть пустым.
+
+      телефон и адресс больше нельзя запросить - https://developers.facebook.com/blog/post/2011/01/14/platform-updates--new-user-object-fields--edge-remove-event-and-more/
+    */
+    scope: ['email'],
+  },
 );
 export const middlewareFacebookCallbackStrategy = passport.authenticate(
   STRATEGY__FACEBOOK,
