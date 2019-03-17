@@ -13,7 +13,7 @@ console.log('=== SERVER CONFIG ===\n', JSON.stringify(config, null, 2), '\n\n');
 
 initModels();
 
-async function fillDb() {
+async function fillDb(dbOptions) {
   const result = await fillDataBase({
     Client: Object.values(CLIENTS),
     User: Object.values(USERS),
@@ -22,6 +22,7 @@ async function fillDb() {
     // dropCollection: true,
     // dropOther: true,
     ignoreError: true,
+    ...dbOptions,
   });
 
   if (useMock) {

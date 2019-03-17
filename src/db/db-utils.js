@@ -42,6 +42,7 @@ export async function connect(
     connectionOptions = dbUri;
     dbUri = null;
   }
+  console.warn('ANKU , config.common.isTest', dbUri, config.common.isTest, config.server.features.db.mongoose.testUri, config);
 
   if (!dbUri) {
     dbUri = config.common.isTest

@@ -88,8 +88,7 @@ module.exports = {
       db: {
         mongoose: {
           uri: MONGO_URI || 'mongodb://localhost:27017/auth-server',
-          testUri:
-            TEST_MONGO_URI || 'mongodb://localhost:27017/auth-serverTest',
+          testUri: TEST_MONGO_URI || 'mongodb://localhost:27017/auth-serverTest',
           auth: {
             user: MONGO_USER || 'authServerUser',
             password: MONGO_PASSWORD || 'authAuth',
