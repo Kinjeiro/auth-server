@@ -141,14 +141,18 @@ export default class ServerRunner {
 
     let server = app;
 
-    if (config.server.features.sslCertificates && config.server.features.sslCertificates.privateKey) {
+    if (
+      !config.common.isTest
+      && config.server.features.sslCertificates
+      && config.server.features.sslCertificates.privateKey
+    ) {
+      // todo @ANKU @LOW - сделать для chai request rejectUnauthorized false - https://github.com/chaijs/chai-http/issues/180
       const privateKey  = fs.readFileSync(config.server.features.sslCertificates.privateKey, 'utf8');
       const certificate = fs.readFileSync(config.server.features.sslCertificates.certificate, 'utf8');
       const credentials = {
         key: privateKey,
         cert: certificate,
       };
-      console.warn('ANKU , credentials', credentials);
       server = https.createServer(credentials, app);
     }
 
