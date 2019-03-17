@@ -5,6 +5,8 @@ import methodOverride from 'method-override';
 import morgan from 'morgan';
 import debug from 'debug';
 import session from 'express-session';
+import https from 'https';
+import fs from 'fs';
 
 import config from './config';
 import { errorToJson } from './utils/common';
@@ -135,10 +137,22 @@ export default class ServerRunner {
 
     // eslint-disable-next-line prefer-destructuring
     const port = config.server.main.port;
-
     app.set('port', port);
 
-    this.server = app.listen(port, () => {
+    let server = app;
+
+    if (config.server.features.sslCertificates && config.server.features.sslCertificates.privateKey) {
+      const privateKey  = fs.readFileSync(config.server.features.sslCertificates.privateKey, 'utf8');
+      const certificate = fs.readFileSync(config.server.features.sslCertificates.certificate, 'utf8');
+      const credentials = {
+        key: privateKey,
+        cert: certificate,
+      };
+      console.warn('ANKU , credentials', credentials);
+      server = https.createServer(credentials, app);
+    }
+
+    this.server = server.listen(port, () => {
       debugRestApi(`Express server listening on port ${port}`);
       logger.info(`Express server listening on port ${port}`);
     });

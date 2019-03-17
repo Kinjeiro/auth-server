@@ -48,6 +48,14 @@ module.exports = {
     },
 
     features: {
+      sslCertificates: {
+        /*
+          если на сервере используется SSL сертификат через nginx - отключите это, просто проставив null
+        */
+        privateKey: path.resolve('./demo-cert/demo.local.key'),
+        certificate: path.resolve('./demo-cert/demo.local.crt'),
+      },
+
       security: {
         token: {
           // секунд
@@ -146,7 +154,16 @@ module.exports = {
           clientSecret: '2aEr4CLOg37KoF0Nok8l3Hyh',
         },
         facebook: {
-          // https://developers.facebook.com/apps/2226184230986091/settings/basic/
+          /*
+            https://developers.facebook.com/apps/2226184230986091/fb-login/settings/
+            - обязательно https
+            - Действительные URI перенаправления для OAuth
+              Нужен точный до апи метод указывать в редиректе:
+              https://127.0.0.1:1338/api/auth/facebook/callback
+
+            https://developers.facebook.com/docs/facebook-login/access-tokens/refreshing
+              - долгосрочный маркер с помощью code
+          */
           clientID: 2226184230986091,
           clientSecret: '6b95d53ebaa413b851c21411cdfb3f6f',
         },
