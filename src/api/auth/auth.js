@@ -240,6 +240,12 @@ createRoute(
   },
 );
 
+// todo @ANKU @CRIT @MAIN - нужно этот парсер вынести в отдельный блок, унифицировать и написать парсеры от гугла \ вк \ фейсбук на юзера
+/**
+ * парсинг profile от соц авторизации в норм юзера
+ * @param user
+ * @return {Promise<{username: string, userId: *, profileImageURI: undefined, displayName: *, provider: *, providerData: {accessToken: *, refreshToken: *}, firstName: *, lastName: *, email: undefined}>}
+ */
 const serializeUser = async user => {
   const {
     provider,
@@ -260,6 +266,7 @@ const serializeUser = async user => {
       ? await imageURLToBase64(photos[0].value)
       : undefined,
     displayName,
+    // todo @ANKU @CRIT @MAIN - добавить пол \ фамилию \ имя \ ник \ ссылку на профайл \ id - вообще сохранить все providerData
     provider,
     providerData: {
       accessToken,
@@ -271,6 +278,7 @@ const serializeUser = async user => {
   };
 };
 
+// todo @ANKU @LOW - переделать проверять если есть в настройках а не так явно защивать
 function checkProvider(provider) {
   if (provider !== PROVIDERS.GOOGLE && provider !== PROVIDERS.FACEBOOK && provider !== PROVIDERS.VKONTAKTE) {
     throw new Error(`Provider must be ${PROVIDERS.VKONTAKTE} || ${PROVIDERS.GOOGLE} || ${PROVIDERS.FACEBOOK}`);
@@ -278,26 +286,35 @@ function checkProvider(provider) {
 }
 
 const socialAuthHandler = async (req, res, next) => {
-  const { client_id: clientId, provider } = req.query;
+  const {
+    client_id: clientId,
+    provider,
+  } = req.query;
 
   if (!clientId || !provider) {
     throw new Error('Provider and clientId must be in query');
   }
+
   checkProvider(provider);
   req.session.pageToRedirect = getRefererHostFullUrl(req);
   req.session.clientId = clientId;
-  const providerCredentials =
-    (await getClientProviderCredentials(clientId, provider)) ||
-    config.server.features.defaultProviderCredentials[provider];
+  const providerCredentials = (await getClientProviderCredentials(clientId, provider))
+    || config.server.features.defaultProviderCredentials[provider];
+  // todo @ANKU @LOW - вопрос не оверхед ли это на каждый запрос использовать? ведь use сингл операция
   initAuthMiddleware(providerCredentials, provider);
   next();
 };
 
 const socialAuthCallbackHandler = async (req, res) => {
-  const { pageToRedirect, clientId } = req.session;
+  const {
+    pageToRedirect,
+    clientId,
+  } = req.session;
   delete req.session.pageToRedirect;
   delete req.session.clientId;
+
   const serializedUser = await serializeUser(req.user);
+  // todo @ANKU @CRIT @MAIN - переделать на уникальность и поиск по почте
   let user = await findUserByName(
     clientId,
     serializedUser.username,
@@ -305,9 +322,14 @@ const socialAuthCallbackHandler = async (req, res) => {
     true,
   );
   if (!user) {
+    // todo @ANKU @CRIT @MAIN - нужно регистририовать максимально данных (имя, фамилия, пол и так далее)
     user = await signUp(serializedUser, req.user.provider, clientId);
   }
-  const tokens = await generateTokens({ clientId, userId: user.id });
+
+  const tokens = await generateTokens({
+    clientId,
+    userId: user.id,
+  });
 
   res.cookie('accessToken', tokens.accessTokenValue);
   res.cookie('refreshToken', tokens.refreshTokenValue);
@@ -315,49 +337,62 @@ const socialAuthCallbackHandler = async (req, res) => {
   res.redirect(302, pageToRedirect);
 };
 
-createRoute('/google', [socialAuthHandler, middlewareGoogleStrategy], {
-  method: 'get',
-  router,
-  auth: false,
-});
 
+// ======================================================
+// GOOGLE
+// ======================================================
+createRoute(
+  '/google',
+  [socialAuthHandler, middlewareGoogleStrategy],
+  {
+    router,
+    auth: false,
+  },
+);
 createRoute(
   '/google/callback',
   [middlewareGoogleCallbackStrategy, socialAuthCallbackHandler],
   {
-    method: 'get',
     router,
     auth: false,
   },
 );
 
-createRoute('/vkontakte', [socialAuthHandler, middlewareVkontakteStrategy], {
-  method: 'get',
-  router,
-  auth: false,
-});
-
+// ======================================================
+// vkontakte
+// ======================================================
+createRoute(
+  '/vkontakte',
+  [socialAuthHandler, middlewareVkontakteStrategy],
+  {
+    router,
+    auth: false,
+  },
+);
 createRoute(
   '/vkontakte/callback',
   [middlewareVkontakteCallbackStrategy, socialAuthCallbackHandler],
   {
-    method: 'get',
     router,
     auth: false,
   },
 );
 
-createRoute('/facebook', [socialAuthHandler, middlewareFacebookStrategy], {
-  method: 'get',
-  router,
-  auth: false,
-});
-
+// ======================================================
+// FACEBOOK
+// ======================================================
+createRoute(
+  '/facebook',
+  [socialAuthHandler, middlewareFacebookStrategy],
+  {
+    router,
+    auth: false,
+  },
+);
 createRoute(
   '/facebook/callback',
   [middlewareFacebookCallbackStrategy, socialAuthCallbackHandler],
   {
-    method: 'get',
     router,
     auth: false,
   },

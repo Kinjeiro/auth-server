@@ -13,7 +13,8 @@ import logger from '../helpers/logger';
 import { getProjectId } from '../helpers/request-data';
 
 import { AccessToken } from '../db/model';
-import Client from '../db/model/client';
+// import Client from '../db/model/client';
+
 import {
   findUserById,
   // findUserByName,
@@ -136,6 +137,7 @@ const createGoogleAuthMiddleware = (credentials, provider) => new GoogleStrategy
     callbackURL: `/api/auth/${provider}/callback`,
   },
   async (accessToken, refreshToken, params, profile, done) => {
+    console.warn('ANKU GOOGLE, accessToken, refreshToken, profile', accessToken, refreshToken, profile, params);
     const newProfile = bindTokens(profile, accessToken, refreshToken);
     return done(null, newProfile);
   },
@@ -155,6 +157,7 @@ const createFacebookAuthMiddleware = (credentials, provider) => new FacebookStra
     ],
   },
   (accessToken, refreshToken, profile, done) => {
+    console.warn('ANKU FACEBOOK, accessToken, refreshToken, profile', accessToken, refreshToken, profile);
     const newProfile = bindTokens(profile, accessToken, refreshToken);
     return done(null, newProfile);
   },
@@ -166,6 +169,46 @@ const createVkontakteAuthMiddleware = (credentials, provider) => new VKontakteSt
     callbackURL: `/api/auth/${provider}/callback`,
   },
   (accessToken, refreshToken, params, profile, done) => {
+    /*
+      const profile = {
+        id: 225097,
+        username: 'kinjeiro',
+        displayName: 'Андрей Кузьмин',
+        name: {
+          familyName: 'Кузьмин',
+          givenName: 'Андрей',
+        },
+        gender: 'male',
+        profileUrl: 'http://vk.com/kinjeiro',
+        photos: [
+          {
+            value: 'https://pp.userapi.com/c837529/v837529682/4f278/RfNEvThBaA0.jpg?ava=1',
+            type: 'photo'
+          }
+        ],
+        provider: 'vkontakte',
+        _raw: '...',
+        _json:
+          {
+            id: 225097,
+            first_name: 'Андрей',
+            last_name: 'Кузьмин',
+            sex: 2,
+            screen_name: 'kinjeiro',
+            photo: 'https://pp.userapi.com/c837529/v837529682/4f278/RfNEvThBaA0.jpg?ava=1'
+          }
+      };
+
+      const params = {
+        access_token: 'c5c469f068dce477e4808a656a48d3beae08a1d46c94d48a89e54b9649be931bfaefdf8a0a9a0031a117f',
+        expires_in: 86400,
+        user_id: 225097,
+        email: 'kinjeiro@gmail.com'
+      };
+    */
+    console.warn('ANKU VK, accessToken, refreshToken, profile', accessToken, refreshToken, profile, params);
+    // todo @ANKU @CRIT @MAIN - получать code и его использовать как refresh_token
+    // todo @ANKU @CRIT @MAIN - получать фио, пол и все возможное
     const newProfile = bindTokens(profile, accessToken, refreshToken);
     newProfile.emails = [{ value: params.email }];
     return done(null, newProfile);
@@ -203,6 +246,7 @@ export const middlewareBearerStrategy = passport.authenticate(
   { session: true },
 );
 
+
 // опции prompt и accessType нужны для получения refreshToken, без них приходит undefined
 export const middlewareGoogleStrategy = passport.authenticate(
   STRATEGY__GOOGLE,
@@ -213,31 +257,46 @@ export const middlewareGoogleStrategy = passport.authenticate(
     scope: ['email', 'profile'],
   },
 );
-
 export const middlewareGoogleCallbackStrategy = passport.authenticate(
   STRATEGY__GOOGLE,
-  { failureRedirect: '/' },
+  {
+    failureRedirect: '/',
+  },
 );
+
 
 export const middlewareVkontakteStrategy = passport.authenticate(
   STRATEGY__VKONTAKTE,
   {
+    /*
+      Права доступа приложения https://vk.com/dev/permissions
+    */
+    /*
+      Если указать "offline", полученный access_token будет "вечным" (токен умрёт, если пользователь сменит свой пароль или удалит приложение).
+      Если не указать "offline", то полученный токен будет жить 12 часов.
+        'scope' => 'photos,offline',
+      (Не применяется в Open API)
+    */
     scope: ['email'],
   },
 );
-
 export const middlewareVkontakteCallbackStrategy = passport.authenticate(
   STRATEGY__VKONTAKTE,
-  { failureRedirect: '/' },
+  {
+    failureRedirect: '/',
+  },
 );
 
-export const middlewareFacebookCallbackStrategy = passport.authenticate(
-  STRATEGY__FACEBOOK,
-  { failureRedirect: '/' },
-);
 
 export const middlewareFacebookStrategy = passport.authenticate(
   STRATEGY__FACEBOOK,
 );
+export const middlewareFacebookCallbackStrategy = passport.authenticate(
+  STRATEGY__FACEBOOK,
+  {
+    failureRedirect: '/',
+  },
+);
+
 
 export default passport;

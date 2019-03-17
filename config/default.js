@@ -141,6 +141,7 @@ module.exports = {
       // Andrey (kinjeiro@gmail.com) account key
       defaultProviderCredentials: {
         google: {
+          // https://codd-wd.ru/shpargalka-poluchenie-tokenov-dlya-raboty-s-api-servisov-google/
           // https://console.developers.google.com/apis/credentials/oauthclient/756888674250-hll8u81fcpeu4t56elschs01g0deg1j3.apps.googleusercontent.com?project=reagentum-231315&hl=ru
           clientID: '756888674250-hll8u81fcpeu4t56elschs01g0deg1j3.apps.googleusercontent.com',
           clientSecret: '2aEr4CLOg37KoF0Nok8l3Hyh',
@@ -151,10 +152,16 @@ module.exports = {
           clientSecret: '6b95d53ebaa413b851c21411cdfb3f6f',
         },
         vkontakte: {
+          // https://codd-wd.ru/primery-realizacii-avtorizacii-oauth-2-0-vkontakte-na-php-i-javascript-vk-api/
           // https://vk.com/editapp?id=6855085&section=options
+          /*
+            если тестируем не забудь добавить в базовый домен 127.0.0.1 а "доверенный урл" должен быть пустым
+          */
           clientID: '6855085',
           clientSecret: 'k3x4cn9PWb3dwGuBKefz',
         },
+        // todo @ANKU @LOW - social auth - yandex
+        // https://codd-wd.ru/primery-avtorizaciya-poluchenie-access-token-oauth-2-0-yandeks-i-rabota-s-api-na-php/
       },
 
       resetPassword: {
