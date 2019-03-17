@@ -277,7 +277,7 @@ export const middlewareVkontakteStrategy = passport.authenticate(
         'scope' => 'photos,offline',
       (Не применяется в Open API)
     */
-    scope: ['email'],
+    scope: ['email', 'offline'],
   },
 );
 export const middlewareVkontakteCallbackStrategy = passport.authenticate(
