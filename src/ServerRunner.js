@@ -142,8 +142,7 @@ export default class ServerRunner {
     let server = app;
 
     if (
-      !config.common.isTest
-      && config.server.features.sslCertificates
+      config.server.features.sslCertificates
       && config.server.features.sslCertificates.privateKey
     ) {
       // todo @ANKU @LOW - сделать для chai request rejectUnauthorized false - https://github.com/chaijs/chai-http/issues/180

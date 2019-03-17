@@ -7,6 +7,9 @@ import sinonChai from 'sinon-chai';
 
 import server from '../src/server';
 
+// отключаем отчеты что сертификат не проверенный
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
+
 // ======================================================
 // Mocha / Chai
 // ======================================================
