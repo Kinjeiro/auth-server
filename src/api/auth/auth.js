@@ -348,7 +348,10 @@ const socialAuthCallbackHandler = async (req, res) => {
       pageToRedirect,
       {
         [config.server.features.security.callbackAccessTokenParam]: accessTokenValue,
-        [config.server.features.security.callbackRefreshTokenParam]: refreshTokenValue,
+        // todo @ANKU @LOW - может лучше передавать дату когда истечет, а не сколько годен (ибо запрос может занимать секунды и они не будут учтены)
+        [config.server.features.security.callbackAccessTokenLifeParam]: accessTokenValue,
+        [config.server.features.security.callbackRefreshTokenParam]: expiresIn,
+        [config.server.features.security.callbackRefreshTokenLifeParam]: refreshExpiresIn,
       },
     );
   } else {
