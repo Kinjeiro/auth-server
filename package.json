@@ -89,6 +89,7 @@
     "passport-strategy": "1.x.x",
     "passport-vkontakte": "~0.3.2",
     "pm2": "~3.0.3",
+    "query-string": "~6.4.0",
     "rimraf": "~2.6.2",
     "shortid": "~2.2.14",
     "swagger-ui-express": "~3.0.10",

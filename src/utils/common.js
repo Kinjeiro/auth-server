@@ -2,9 +2,8 @@
 /* eslint-disable no-restricted-syntax */
 import lodashDifference from 'lodash/difference';
 import crypto from 'crypto';
-import https from 'https';
 import http from 'http';
-import url from 'url';
+import https from 'https';
 
 // todo @ANKU @LOW - можно потом сделать jwt токен и удобно проверять expire
 /*
@@ -148,8 +147,3 @@ export function imageURLToBase64(urlPath) {
   });
 }
 
-export function getRefererHostFullUrl(req) {
-  const referer = req.get('referer');
-  const refererUrl = url.parse(referer);
-  return `${refererUrl.protocol}//${refererUrl.host}`;
-}
