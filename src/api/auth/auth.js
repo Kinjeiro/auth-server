@@ -333,9 +333,12 @@ const socialAuthCallbackHandler = async (req, res) => {
 
   const {
     accessTokenValue,
-    refreshTokenValue,
     expiresIn,
+    // expiresInDate,
+
+    refreshTokenValue,
     refreshExpiresIn,
+    // refreshExpiresInDate,
   } = await generateTokens({
     clientId,
     userId: user.id,
@@ -349,8 +352,8 @@ const socialAuthCallbackHandler = async (req, res) => {
       {
         [config.server.features.security.callbackAccessTokenParam]: accessTokenValue,
         // todo @ANKU @LOW - может лучше передавать дату когда истечет, а не сколько годен (ибо запрос может занимать секунды и они не будут учтены)
-        [config.server.features.security.callbackAccessTokenLifeParam]: accessTokenValue,
-        [config.server.features.security.callbackRefreshTokenParam]: expiresIn,
+        [config.server.features.security.callbackAccessTokenLifeParam]: expiresIn,
+        [config.server.features.security.callbackRefreshTokenParam]: refreshTokenValue,
         [config.server.features.security.callbackRefreshTokenLifeParam]: refreshExpiresIn,
       },
     );
