@@ -54,7 +54,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-push": "git pull --rebase --no-verify && ((git-branch-is release && npm run patch-publish-push) || echo 'not master')"
+      "pre-push": "git pull --rebase --no-verify && ((git-branch-is master && npm run patch-publish-push) || echo 'not master')"
     }
   },
   "deleteDependencies": {
