@@ -1,6 +1,6 @@
 {
   "name": "@reagentum/auth-server",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Front Core auth-server (OAuth2)",
   "publishConfig": {
     "registry": "http://npm.reagentum.ru/"
@@ -49,7 +49,6 @@
     "preversion": "npm run mongo:run:windows && npm run test",
     "version": "npm run compile && git add -A",
     "postversion": "git push --follow-tags --no-verify",
-
     "patch-publish-push": "npm run release-patch && npm publish && git push --no-verify"
   },
   "husky": {
