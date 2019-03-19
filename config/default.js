@@ -57,6 +57,9 @@ module.exports = {
       },
 
       security: {
+        callbackAccessTokenParam: 'accessToken',
+        callbackRefreshTokenParam: 'refreshToken',
+
         token: {
           // секунд
           tokenLife: 3600, // час

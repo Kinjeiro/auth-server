@@ -49,6 +49,8 @@ export async function generateTokens(data, done) {
     refreshTokenValue,
     expiresIn: token.expiresIn,
     expiresInDate: token.expiresInDate,
+    refreshExpiresIn: refreshToken.expiresIn,
+    refreshExpiresInDate: refreshToken.expiresInDate,
   };
 }
 

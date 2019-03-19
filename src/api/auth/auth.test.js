@@ -431,7 +431,7 @@ describe('[api] auth', function anon() {
         // логин по старым данным должен быть неудачным
         logger.log('Try to signin with old credentials');
         accessToken = await getTestToken(testUser, testClient, false);
-        expect(true).to.be.false;
+        expect(true).to.equal(false);
       } catch (errorResponse) {
         expect(errorResponse.status).to.equal(403);
         expect(errorResponse.response.body.message).to.equal('Invalid resource owner credentials');

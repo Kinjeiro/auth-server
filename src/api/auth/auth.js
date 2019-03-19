@@ -3,7 +3,7 @@ import Handlebars from 'handlebars';
 import omit from 'lodash/omit';
 
 import { getHandlebarsTemplate } from '../../utils/node-utils';
-import { imageURLToBase64, getRefererHostFullUrl } from '../../utils/common';
+import { imageURLToBase64} from '../../utils/common';
 import config from '../../config';
 import createRoute from '../../helpers/express/create-route';
 import logger from '../../helpers/logger';
@@ -34,6 +34,11 @@ import {
   findUserByName,
 } from '../../services/service-auth';
 import { getClientProviderCredentials } from '../../services/service-clients';
+import {
+  getRefererHostFullUrl,
+  hasRefererAnotherDomain,
+} from '../../utils/request-utils';
+import { updateUrl } from '../../utils/uri-utils';
 
 const hbsMailSignup = getHandlebarsTemplate(path.resolve(__dirname, './mail-signup.hbs'));
 const hbsMailResetPassword = getHandlebarsTemplate(path.resolve(__dirname, './mail-reset-password.hbs'));
@@ -326,15 +331,32 @@ const socialAuthCallbackHandler = async (req, res) => {
     user = await signUp(serializedUser, req.user.provider, clientId);
   }
 
-  const tokens = await generateTokens({
+  const {
+    accessTokenValue,
+    refreshTokenValue,
+    expiresIn,
+    refreshExpiresIn,
+  } = await generateTokens({
     clientId,
     userId: user.id,
   });
 
-  res.cookie('accessToken', tokens.accessTokenValue);
-  res.cookie('refreshToken', tokens.refreshTokenValue);
-  res.cookie('authType', 'Bearer');
-  res.redirect(302, pageToRedirect);
+
+  let pageToRedirectFinal = pageToRedirect;
+  if (hasRefererAnotherDomain(req)) {
+    pageToRedirectFinal = updateUrl(
+      pageToRedirect,
+      {
+        [config.server.features.security.callbackAccessTokenParam]: accessTokenValue,
+        [config.server.features.security.callbackRefreshTokenParam]: refreshTokenValue,
+      },
+    );
+  } else {
+    res.cookie('accessToken', accessTokenValue, { maxAge: expiresIn });
+    res.cookie('refreshToken', refreshTokenValue, { maxAge: refreshExpiresIn });
+    res.cookie('authType', 'Bearer');
+  }
+  res.redirect(302, pageToRedirectFinal);
 };
 
 
