@@ -153,11 +153,19 @@ module.exports = {
       // Andrey (kinjeiro@gmail.com) account key
       defaultProviderCredentials: {
         google: {
-          // https://codd-wd.ru/shpargalka-poluchenie-tokenov-dlya-raboty-s-api-servisov-google/
-          // https://console.developers.google.com/apis/credentials/oauthclient/756888674250-hll8u81fcpeu4t56elschs01g0deg1j3.apps.googleusercontent.com?project=reagentum-231315&hl=ru
-          // зачем затребовал включить Google Plus Api
-          clientID: '756888674250-hll8u81fcpeu4t56elschs01g0deg1j3.apps.googleusercontent.com',
-          clientSecret: '2aEr4CLOg37KoF0Nok8l3Hyh',
+          /*
+            https://codd-wd.ru/shpargalka-poluchenie-tokenov-dlya-raboty-s-api-servisov-google/
+
+            https://console.developers.google.com/apis/credentials/oauthclient/756888674250-kd5a9k8b007q3t65n9s9m03bmdasrp0n.apps.googleusercontent.com?project=reagentum-231315&hl=ru
+            там нужно добавить точные редиректы:
+              https://dev.reagentum.ru:1338/api/auth/google/callback
+              https://front.reagentum.ru:1338/api/auth/google/callback
+              https://127.0.0.1:1338/api/auth/google/callback
+
+            зачем затребовал включить Google Plus Api
+          */
+          clientID: '756888674250-kd5a9k8b007q3t65n9s9m03bmdasrp0n.apps.googleusercontent.com',
+          clientSecret: '5gAB3bbipBX0HPuxJroMZvjT',
         },
         facebook: {
           /*
