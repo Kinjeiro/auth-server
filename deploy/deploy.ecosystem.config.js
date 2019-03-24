@@ -9,6 +9,8 @@ const {
   getProcessAppName,
 } = require('./ecosystem-utils');
 
+const { serializeObjectToNodeEnv } = require('../config/utils/node-env-object');
+
 const appName = packageJson.name;
 const appVersion = packageJson.version;
 
@@ -78,6 +80,9 @@ function deployOptions(isProduction = false) {
     ? Object.keys(startNodeEnvObject).reduce(
       (result, envKey) => {
         let value = startNodeEnvObject[envKey];
+        if (typeof value === 'object') {
+          value = serializeObjectToNodeEnv(value);
+        }
         if (typeof value !== 'number') {
           value = `'${value}'`;
         }
