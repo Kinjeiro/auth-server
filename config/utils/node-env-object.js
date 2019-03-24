@@ -4,12 +4,21 @@
  */
 const NODE_ENV_HACK_CONSTANT = '[[[';
 
+function regExpEscape(regExpString) {
+  return regExpString.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
 function serializeObjectToNodeEnv(object) {
   return JSON.stringify(object).replace(/"/g, NODE_ENV_HACK_CONSTANT);
 }
 
 function parseObjectFromNodeEnv(objectHackJsonStr) {
-  return objectHackJsonStr && JSON.parse(objectHackJsonStr.replace(new RegExp(NODE_ENV_HACK_CONSTANT, 'g'), '"'));
+  return objectHackJsonStr && JSON.parse(
+    objectHackJsonStr.replace(
+      new RegExp(regExpEscape(NODE_ENV_HACK_CONSTANT), 'g'),
+      '"'
+    )
+  );
 }
 
 module.exports = {
