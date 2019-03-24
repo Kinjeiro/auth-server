@@ -83,7 +83,8 @@ function deployOptions(isProduction = false) {
           // value = `${JSON.stringify(value).replace(/"/g, '\\"')}`;
           // value = `'${JSON.stringify(value).replace(/"/g, '\\\\"')}'`;
           // value = `'${JSON.stringify(value).replace(/"/g, '\\"')}'`;
-          value = `${JSON.stringify(value).replace(/"/g, '[[[')}`;
+          // value = `${JSON.stringify(value).replace(/"/g, '[[[')}`;
+          value = `${JSON.stringify(value).replace(/"/g, '"')}`;
         } else if (typeof value !== 'number') {
           value = `'${value}'`;
         }
