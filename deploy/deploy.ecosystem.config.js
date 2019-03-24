@@ -83,14 +83,14 @@ function deployOptions(isProduction = false) {
           // value = `${JSON.stringify(value).replace(/"/g, '\\"')}`;
           // value = `'${JSON.stringify(value).replace(/"/g, '\\\\"')}'`;
           // value = `'${JSON.stringify(value).replace(/"/g, '\\"')}'`;
-          value = `${JSON.stringify(value).replace(/"/g, '\\"')}`;
+          value = `${JSON.stringify(value).replace(/"/g, '\'')}`;
         } else if (typeof value !== 'number') {
           value = `'${value}'`;
         }
         return `${result} '${envKey}'=${value}`;
       },
       // "test": "cross-env TS_NODE_COMPILER_OPTIONS={\\\"module\\\":\\\"commonjs\\\"} node some_file.test.ts"
-      ' cross-env test={\\"opa\\": \\"value\\"} ',
+      ' cross-env ',
     )
     : '';
   console.log('startNodeEnvStr: ', startNodeEnvStr);
@@ -164,7 +164,6 @@ function deployOptions(isProduction = false) {
       && npm install -g cross-env\
       && npm install\
       && npm install\
-      && cross-env TS_NODE_COMPILER_OPTIONS={\\\\\\'module\\\\\\':\\\\\\'commonjs\\\\\\'} npm run start\
       && ${startNodeEnvStr} npm run ${isProduction ? 'build:production' : 'build:development'}\
       && ${startNodeEnvStr} npm run ${isProduction ? 'start:daemon:production' : 'start:daemon:development'}\
       && pm2 save\
