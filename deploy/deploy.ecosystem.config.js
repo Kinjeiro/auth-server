@@ -79,8 +79,10 @@ function deployOptions(isProduction = false) {
       (result, envKey) => {
         let value = startNodeEnvObject[envKey];
         if (typeof value === 'object') {
+          console.warn('ANKU , value', typeof value, value);
           // value = `${JSON.stringify(value).replace(/"/g, '\\"')}`;
-          value = `'${JSON.stringify(value).replace(/"/g, '\\\\"')}'`;
+          // value = `'${JSON.stringify(value).replace(/"/g, '\\\\"')}'`;
+          value = `'${JSON.stringify({}).replace(/"/g, '\\"')}'`;
         } else if (typeof value !== 'number') {
           value = `'${value}'`;
         }
