@@ -89,7 +89,7 @@ function deployOptions(isProduction = false) {
         }
         return `${result} '${envKey}'=${value}`;
       },
-      ' cross-env \'test\'=\'{ \\\\\\"opa\\\\\\": \\\\\\"value\\\\\\" }\' ',
+      ' cross-env \'test\'={ \\\\\\"opa\\\\\\": \\\\\\"value\\\\\\" } ',
     )
     : '';
   console.log('startNodeEnvStr: ', startNodeEnvStr);
