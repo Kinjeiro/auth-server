@@ -81,7 +81,7 @@ function deployOptions(isProduction = false) {
         if (typeof value !== 'number') {
           value = `'${value}'`;
         }
-        return `${result} '${envKey}'=${value}`;
+        return `${result} '${envKey}'=${JSON.stringify(value)}`;
       },
       ' cross-env ',
     )
