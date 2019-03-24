@@ -3,7 +3,7 @@ const {
   extendDeep,
 } = require('config/lib/util');
 
-const { parseObjectFromNodeEnv } = require('./utils/node_env_object');
+const { parseObjectFromNodeEnv } = require('./utils/node-env-object');
 
 const defaultLogsPath = `${process.cwd()}/logs/all.log`;
 

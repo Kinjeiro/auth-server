@@ -9,7 +9,7 @@ const {
   getProcessAppName,
 } = require('./ecosystem-utils');
 
-const { serializeObjectToNodeEnv } = require('../config/utils/node_env_object');
+const { serializeObjectToNodeEnv } = require('../config/utils/node-env-object');
 
 const appName = packageJson.name;
 const appVersion = packageJson.version;

@@ -5,7 +5,7 @@
 const NODE_ENV_HACK_CONSTANT = '[[[';
 
 function serializeObjectToNodeEnv(object) {
-  return JSON.stringify(object.replace(/"/g, NODE_ENV_HACK_CONSTANT));
+  return JSON.stringify(object).replace(/"/g, NODE_ENV_HACK_CONSTANT);
 }
 
 function parseObjectFromNodeEnv(objectHackJsonStr) {
