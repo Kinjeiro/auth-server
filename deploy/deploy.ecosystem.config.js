@@ -78,8 +78,10 @@ function deployOptions(isProduction = false) {
     ? Object.keys(startNodeEnvObject).reduce(
       (result, envKey) => {
         let value = startNodeEnvObject[envKey];
-        if (typeof value !== 'number') {
-          value = `'${JSON.stringify(value)}'`;
+        if (typeof value === 'object') {
+          value = `'${JSON.stringify(value).replace('"', '\\"')}'`;
+        } else if (typeof value !== 'number') {
+          value = `'${value}'`;
         }
         return `${result} '${envKey}'=${value}`;
       },
