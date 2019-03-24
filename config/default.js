@@ -25,6 +25,7 @@ const {
 
 const env = NODE_ENV;
 
+console.warn('ANKU , CUSTOM_CONFIG', CUSTOM_CONFIG);
 const customConfig = CUSTOM_CONFIG ? JSON.parse(CUSTOM_CONFIG) : undefined;
 
 module.exports = extendDeep(
