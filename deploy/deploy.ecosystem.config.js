@@ -79,9 +79,9 @@ function deployOptions(isProduction = false) {
       (result, envKey) => {
         let value = startNodeEnvObject[envKey];
         if (typeof value !== 'number') {
-          value = `'${value}'`;
+          value = `'${JSON.stringify(value)}'`;
         }
-        return `${result} '${envKey}'=${JSON.stringify(value)}`;
+        return `${result} '${envKey}'=${value}`;
       },
       ' cross-env ',
     )
