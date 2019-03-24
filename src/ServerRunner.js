@@ -99,13 +99,11 @@ export default class ServerRunner {
   }
 
   initServer() {
-    if (!config.common.isProduction) {
-      logger.debug(
-        '=== SERVER CONFIG ===\n',
-        JSON.stringify(config, null, 2),
-        '\n\n',
-      );
-    }
+    logger.debug(
+      '=== SERVER CONFIG ===\n',
+      JSON.stringify(config, null, 2),
+      '\n\n',
+    );
 
     this.app = this.createApp(config.server.main.expressServerOptions);
 
@@ -148,10 +146,14 @@ export default class ServerRunner {
       // todo @ANKU @LOW - сделать для chai request rejectUnauthorized false - https://github.com/chaijs/chai-http/issues/180
       const privateKey  = fs.readFileSync(config.server.features.sslCertificates.privateKey, 'utf8');
       const certificate = fs.readFileSync(config.server.features.sslCertificates.certificate, 'utf8');
+      const chain = config.server.features.sslCertificates.chain && fs.readFileSync(config.server.features.sslCertificates.chain, 'utf8');
+
       const credentials = {
         key: privateKey,
         cert: certificate,
+        ca: chain,
       };
+
       server = https.createServer(credentials, app);
     }
 
