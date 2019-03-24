@@ -90,6 +90,8 @@ function deployOptions(isProduction = false) {
     : '';
   console.log('startNodeEnvStr: ', startNodeEnvStr);
 
+  console.warn('ANKU test, ', `${startNodeEnvStr} npm run ${isProduction ? 'build:production' : 'build:development'}`);
+
   return {
     // мы кладем ключ в DEPLOY KEYS в gitlab CI
     // /*
