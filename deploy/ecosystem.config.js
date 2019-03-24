@@ -9,7 +9,6 @@ const {
 } = process.env;
 
 const logs = getLogPaths();
-console.log('APP LOGS', logs);
 
 module.exports = {
   /**

@@ -16,6 +16,5 @@ export function fullUrl(req) {
 
 export function hasRefererAnotherDomain(req) {
   const refererUrl = url.parse(req.get('referer'));
-  console.warn('ANKU , referer', refererUrl.hostname, req.hostname);
   return refererUrl.hostname !== req.hostname;
 }

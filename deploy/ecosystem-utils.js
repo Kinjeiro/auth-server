@@ -28,7 +28,6 @@ function defaultAppLogFolderPath(user = DEFAULT_USER, logsFolder = 'logs') {
 }
 
 function getLogPaths(appNameInner = getProcessAppName(), logPath = defaultAppLogFolderPath()) {
-  console.warn('ANKU , appNameInner', appNameInner);
   return {
     output: path.join(logPath, `${appNameInner}-out.log`),
     error: path.join(logPath, `${appNameInner}-error.log`),

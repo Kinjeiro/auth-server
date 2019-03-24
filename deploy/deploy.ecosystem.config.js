@@ -155,7 +155,7 @@ function deployOptions(isProduction = false) {
       && npm install -g cross-env\
       && npm install\
       && npm install\
-      && npm run ${isProduction ? 'build:production' : 'build:development'}\
+      && ${startNodeEnvStr} npm run ${isProduction ? 'build:production' : 'build:development'}\
       && ${startNodeEnvStr} npm run ${isProduction ? 'start:daemon:production' : 'start:daemon:development'}\
       && pm2 save\
       && echo 'wait 30 sec and show logs...'\
