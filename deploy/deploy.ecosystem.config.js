@@ -83,13 +83,14 @@ function deployOptions(isProduction = false) {
           // value = `${JSON.stringify(value).replace(/"/g, '\\"')}`;
           // value = `'${JSON.stringify(value).replace(/"/g, '\\\\"')}'`;
           // value = `'${JSON.stringify(value).replace(/"/g, '\\"')}'`;
-          value = `${JSON.stringify(value).replace(/"/g, '\\\\\\"')}`;
+          value = `${JSON.stringify(value).replace(/"/g, '\\"')}`;
         } else if (typeof value !== 'number') {
           value = `'${value}'`;
         }
         return `${result} '${envKey}'=${value}`;
       },
-      ' cross-env \'test\'={ \\\\\\"opa\\\\\\": \\\\\\"value\\\\\\" } ',
+      // "test": "cross-env TS_NODE_COMPILER_OPTIONS={\\\"module\\\":\\\"commonjs\\\"} node some_file.test.ts"
+      ' cross-env test={\\"opa\\": \\"value\\"} ',
     )
     : '';
   console.log('startNodeEnvStr: ', startNodeEnvStr);
