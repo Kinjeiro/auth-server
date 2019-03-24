@@ -99,13 +99,11 @@ export default class ServerRunner {
   }
 
   initServer() {
-    if (!config.common.isProduction) {
-      logger.debug(
-        '=== SERVER CONFIG ===\n',
-        JSON.stringify(config, null, 2),
-        '\n\n',
-      );
-    }
+    logger.debug(
+      '=== SERVER CONFIG ===\n',
+      JSON.stringify(config, null, 2),
+      '\n\n',
+    );
 
     this.app = this.createApp(config.server.main.expressServerOptions);
 
