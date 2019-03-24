@@ -3,6 +3,8 @@ const {
   extendDeep,
 } = require('config/lib/util');
 
+const { parseObjectFromNodeEnv } = require('./utils/node_env_object');
+
 const defaultLogsPath = `${process.cwd()}/logs/all.log`;
 
 const packageJson = require(path.join(process.cwd(), 'package.json'));
@@ -25,8 +27,7 @@ const {
 
 const env = NODE_ENV;
 
-console.warn('ANKU , CUSTOM_CONFIG', JSON.stringify(CUSTOM_CONFIG), CUSTOM_CONFIG.replace(/\[\[\[/gi, '"'));
-const customConfig = CUSTOM_CONFIG ? JSON.parse(CUSTOM_CONFIG.replace(/\[\[\[/gi, '"')) : undefined;
+const customConfig = parseObjectFromNodeEnv(CUSTOM_CONFIG);
 
 module.exports = extendDeep(
   {

@@ -9,6 +9,8 @@ const {
   getProcessAppName,
 } = require('./ecosystem-utils');
 
+const { serializeObjectToNodeEnv } = require('../config/utils/node_env_object');
+
 const appName = packageJson.name;
 const appVersion = packageJson.version;
 
@@ -79,12 +81,8 @@ function deployOptions(isProduction = false) {
       (result, envKey) => {
         let value = startNodeEnvObject[envKey];
         if (typeof value === 'object') {
-          console.warn('ANKU , value', typeof value, value, JSON.stringify(value));
-          // value = `${JSON.stringify(value).replace(/"/g, '\\"')}`;
-          // value = `'${JSON.stringify(value).replace(/"/g, '\\\\"')}'`;
-          // value = `'${JSON.stringify(value).replace(/"/g, '\\"')}'`;
-          // value = `${JSON.stringify(value).replace(/"/g, '[[[')}`;
-          value = `${JSON.stringify(value).replace(/"/g, '"')}`;
+          // value = `${JSON.stringify(value)}`;
+          value = serializeObjectToNodeEnv(value);
         } else if (typeof value !== 'number') {
           value = `'${value}'`;
         }
@@ -95,8 +93,6 @@ function deployOptions(isProduction = false) {
     )
     : '';
   console.log('startNodeEnvStr: ', startNodeEnvStr);
-
-  console.warn('ANKU test, ', `${startNodeEnvStr} npm run ${isProduction ? 'build:production' : 'build:development'}`);
 
   return {
     // мы кладем ключ в DEPLOY KEYS в gitlab CI
