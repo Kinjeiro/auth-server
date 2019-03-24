@@ -16,6 +16,7 @@ const {
   LOGS_PATH = defaultLogsPath,
   DROP_ON_START = false,
   CONTEXT_PATH,
+  NO_SSL_CERTIFICATES = false,
 } = process.env;
 
 const env = NODE_ENV;
@@ -48,13 +49,15 @@ module.exports = {
     },
 
     features: {
-      sslCertificates: {
-        /*
-          если на сервере используется SSL сертификат через nginx - отключите это, просто проставив null
-        */
-        privateKey: path.resolve('./demo-cert/demo.local.key'),
-        certificate: path.resolve('./demo-cert/demo.local.crt'),
-      },
+      sslCertificates: NO_SSL_CERTIFICATES
+        ? false
+        : {
+          /*
+            если на сервере используется SSL сертификат через nginx - отключите это, просто проставив null
+          */
+          privateKey: path.resolve('./demo-cert/demo.local.key'),
+          certificate: path.resolve('./demo-cert/demo.local.crt'),
+        },
 
       security: {
         callbackAccessTokenParam: 'accessToken',
