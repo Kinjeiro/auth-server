@@ -79,7 +79,7 @@ function deployOptions(isProduction = false) {
       (result, envKey) => {
         let value = startNodeEnvObject[envKey];
         if (typeof value === 'object') {
-          value = `'${JSON.stringify(value).replace('"', '\\"')}'`;
+          value = `'${JSON.stringify(value).replace(/"/g, '\\"')}'`;
         } else if (typeof value !== 'number') {
           value = `'${value}'`;
         }
