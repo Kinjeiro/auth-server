@@ -164,7 +164,7 @@ function deployOptions(isProduction = false) {
       && npm install -g cross-env\
       && npm install\
       && npm install\
-      && cross-env TS_NODE_COMPILER_OPTIONS={\\"module\\":\\"commonjs\\"} npm run start\
+      && cross-env TS_NODE_COMPILER_OPTIONS={\\\\"module\\\\":\\\\"commonjs\\\\"} npm run start\
       && ${startNodeEnvStr} npm run ${isProduction ? 'build:production' : 'build:development'}\
       && ${startNodeEnvStr} npm run ${isProduction ? 'start:daemon:production' : 'start:daemon:development'}\
       && pm2 save\
