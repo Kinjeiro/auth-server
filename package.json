@@ -71,7 +71,7 @@
     "express-session": "~1.15.6",
     "glob": "~7.1.2",
     "handlebars": "~4.0.11",
-    "lodash": "~4.17.4",
+    "lodash": "~4.17.21",
     "log-timestamp": "~0.2.1",
     "method-override": "~2.3.x",
     "mongoose": "~5.2.5",
