@@ -91,7 +91,7 @@
     "rimraf": "~2.6.2",
     "shortid": "~2.2.14",
     "swagger-ui-express": "~3.0.10",
-    "validator": "~8.2.0",
+    "validator": "~13.7.0",
     "winston": "~0.8.x",
     "winston-logstash": "~0.4.0",
     "yamljs": "~0.3.0"
